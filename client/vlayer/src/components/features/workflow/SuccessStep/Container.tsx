@@ -8,7 +8,7 @@ export const SuccessStep = () => {
   const verificationResults = state.verificationResults;
 
   const tx = verificationResults?.txHash || "";
-  const handle = ""; // This could be extracted from verification results if needed
+  const handle = "";
 
   return (
     <SuccessStepPresentational

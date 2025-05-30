@@ -1,16 +1,31 @@
 import React from "react";
 import { Badge } from "../../ui/badge";
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
+  const handleNavClick = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
   return (
     <div className="w-64 mr-8">
       <nav className="space-y-2">
-        <a
-          href="#"
-          className="flex items-center px-3 py-2 text-sm font-medium text-foreground bg-muted rounded-md"
+        <button
+          onClick={() => handleNavClick("proposals")}
+          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
+            activeTab === "proposals"
+              ? "text-foreground bg-muted"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
         >
           🏠 Home
-        </a>
+        </button>
         <a
           href="#"
           className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"
@@ -23,12 +38,16 @@ export const Sidebar: React.FC = () => {
         >
           🔔 Notifications
         </a>
-        <a
-          href="#"
-          className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"
+        <button
+          onClick={() => handleNavClick("profile")}
+          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
+            activeTab === "profile"
+              ? "text-foreground bg-muted"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
         >
           👤 Profile
-        </a>
+        </button>
         <a
           href="#"
           className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"

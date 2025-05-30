@@ -22,6 +22,7 @@
     "test:unit": "vitest --run"
   },
   "dependencies": {
+    "@blockscout/app-sdk": "^0.1.0",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
@@ -33,6 +34,7 @@
     "@vercel/analytics": "^1.4.1",
     "@vlayer/react": "1.0.2",
     "@vlayer/sdk": "1.0.2",
+    "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "debug": "^4.3.7",
