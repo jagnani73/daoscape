@@ -38,34 +38,3 @@ export const getMember = async (member_id: string) => {
 
     return member;
 };
-
-export const changeReputation = async (
-    members: {
-        member_id: string;
-        change: number;
-    }[]
-) => {
-    await Promise.all(
-        members.map(async ({ member_id, change }) => {
-            const currentMember = await getMember(member_id);
-            if (!currentMember) {
-                throw new Error("Member not found");
-            }
-
-            const newReputation = currentMember.reputation + change;
-
-            const { error } = await SupabaseService.getSupabase("admin")
-                .from("members")
-                .update({
-                    reputation: newReputation,
-                })
-                .eq("member_id", member_id)
-                .select()
-                .single();
-
-            if (error) {
-                throw error;
-            }
-        })
-    );
-};

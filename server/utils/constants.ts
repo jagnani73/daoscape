@@ -11,6 +11,8 @@ export enum VOTE_TYPES {
     ABSTAIN = "ABSTAIN",
 }
 
+export const STARTER_REPUTATION = 100;
+
 export const MERITS_PER_PROPOSAL = 50;
 
 export const CORRECT_VOTE_REPUTATION_CHANGE = 10;

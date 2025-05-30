@@ -11,7 +11,7 @@ import {
     HttpStatusCode,
     randomVotingHouse,
 } from "../../utils/functions";
-import { changeReputation } from "../member/member.service";
+import { changeReputation } from "../membership/membership.service";
 import { getVotesForProposal } from "../vote/vote.service";
 import type { CreateProposalBody, MeritDistribution } from "./proposal.schema";
 
@@ -28,7 +28,7 @@ export const createProposal = async ({
         .insert({
             title,
             description,
-            dao_id: dao_id || null,
+            dao_id,
             voting_start,
             voting_end,
             feedback_end,
@@ -164,10 +164,12 @@ export const concludeProposal = async (
             await changeReputation([
                 ...yesVotes.map(({ member_id }) => ({
                     member_id,
+                    dao_id: proposal.dao_id,
                     change: CORRECT_VOTE_REPUTATION_CHANGE,
                 })),
                 ...noVotes.map(({ member_id }) => ({
                     member_id,
+                    dao_id: proposal.dao_id,
                     change: INCORRECT_VOTE_REPUTATION_CHANGE,
                 })),
             ]);
@@ -186,10 +188,12 @@ export const concludeProposal = async (
             await changeReputation([
                 ...yesVotes.map(({ member_id }) => ({
                     member_id,
+                    dao_id: proposal.dao_id,
                     change: INCORRECT_VOTE_REPUTATION_CHANGE,
                 })),
                 ...noVotes.map(({ member_id }) => ({
                     member_id,
+                    dao_id: proposal.dao_id,
                     change: CORRECT_VOTE_REPUTATION_CHANGE,
                 })),
             ]);

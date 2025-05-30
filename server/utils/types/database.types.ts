@@ -18,6 +18,7 @@ export type Database = {
                     name: string;
                     owner_address: string;
                     socials: string[];
+                    tags: string[] | null;
                     tokens: Json[];
                 };
                 Insert: {
@@ -28,6 +29,7 @@ export type Database = {
                     name: string;
                     owner_address: string;
                     socials: string[];
+                    tags?: string[] | null;
                     tokens: Json[];
                 };
                 Update: {
@@ -38,6 +40,7 @@ export type Database = {
                     name?: string;
                     owner_address?: string;
                     socials?: string[];
+                    tags?: string[] | null;
                     tokens?: Json[];
                 };
                 Relationships: [
@@ -54,17 +57,14 @@ export type Database = {
                 Row: {
                     created_at: string;
                     member_id: string;
-                    reputation: number;
                 };
                 Insert: {
                     created_at?: string;
                     member_id: string;
-                    reputation: number;
                 };
                 Update: {
                     created_at?: string;
                     member_id?: string;
-                    reputation?: number;
                 };
                 Relationships: [];
             };
@@ -74,18 +74,21 @@ export type Database = {
                     dao_id: string;
                     house: Database["public"]["Enums"]["HOUSES"];
                     member_id: string;
+                    reputation: number;
                 };
                 Insert: {
                     created_at?: string;
                     dao_id?: string;
                     house: Database["public"]["Enums"]["HOUSES"];
                     member_id: string;
+                    reputation: number;
                 };
                 Update: {
                     created_at?: string;
                     dao_id?: string;
                     house?: Database["public"]["Enums"]["HOUSES"];
                     member_id?: string;
+                    reputation?: number;
                 };
                 Relationships: [
                     {
@@ -110,7 +113,7 @@ export type Database = {
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;
                     created_at: string;
-                    dao_id: string | null;
+                    dao_id: string;
                     description: string;
                     feedback_conclusion:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
@@ -127,7 +130,7 @@ export type Database = {
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;
                     created_at?: string;
-                    dao_id?: string | null;
+                    dao_id?: string;
                     description: string;
                     feedback_conclusion?:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
@@ -144,7 +147,7 @@ export type Database = {
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;
                     created_at?: string;
-                    dao_id?: string | null;
+                    dao_id?: string;
                     description?: string;
                     feedback_conclusion?:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
@@ -159,6 +162,56 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "proposals_dao_id_fkey";
+                        columns: ["dao_id"];
+                        isOneToOne: false;
+                        referencedRelation: "daos";
+                        referencedColumns: ["dao_id"];
+                    },
+                ];
+            };
+            quests: {
+                Row: {
+                    created_at: string;
+                    dao_id: string;
+                    description: string;
+                    end_time: string;
+                    quest_id: string;
+                    reward_merits: number;
+                    reward_token_address: string | null;
+                    reward_token_amount: string | null;
+                    reward_token_chain: number | null;
+                    start_time: string;
+                    title: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    dao_id: string;
+                    description: string;
+                    end_time: string;
+                    quest_id?: string;
+                    reward_merits: number;
+                    reward_token_address?: string | null;
+                    reward_token_amount?: string | null;
+                    reward_token_chain?: number | null;
+                    start_time: string;
+                    title: string;
+                };
+                Update: {
+                    created_at?: string;
+                    dao_id?: string;
+                    description?: string;
+                    end_time?: string;
+                    quest_id?: string;
+                    reward_merits?: number;
+                    reward_token_address?: string | null;
+                    reward_token_amount?: string | null;
+                    reward_token_chain?: number | null;
+                    start_time?: string;
+                    title?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "quests_dao_id_fkey";
                         columns: ["dao_id"];
                         isOneToOne: false;
                         referencedRelation: "daos";

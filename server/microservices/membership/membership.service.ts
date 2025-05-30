@@ -1,5 +1,8 @@
 import { OneinchService, SupabaseService } from "../../services";
-import { SUPABASE_0_ROWS_ERROR_CODE } from "../../utils/constants";
+import {
+    STARTER_REPUTATION,
+    SUPABASE_0_ROWS_ERROR_CODE,
+} from "../../utils/constants";
 import {
     createError,
     HttpStatusCode,
@@ -8,6 +11,21 @@ import {
 import { getDao } from "../dao/dao.service";
 import { getMember } from "../member/member.service";
 import type { JoinDaoBody } from "./membership.schema";
+
+const getMembership = async (member_id: string, dao_id: string) => {
+    const { data, error } = await SupabaseService.getSupabase("admin")
+        .from("memberships")
+        .select()
+        .eq("member_id", member_id)
+        .eq("dao_id", dao_id)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+};
 
 export const getMemberships = async (member_id: string) => {
     const { data, error } = await SupabaseService.getSupabase("admin")
@@ -94,6 +112,7 @@ export const joinDao = async ({ dao_id, wallet_address }: JoinDaoBody) => {
             dao_id,
             member_id: member.member_id,
             house: randomVotingHouse(),
+            reputation: STARTER_REPUTATION,
         })
         .select()
         .single();
@@ -103,4 +122,40 @@ export const joinDao = async ({ dao_id, wallet_address }: JoinDaoBody) => {
     }
 
     return data;
+};
+
+export const changeReputation = async (
+    changes: {
+        member_id: string;
+        dao_id: string;
+        change: number;
+    }[]
+) => {
+    await Promise.all(
+        changes.map(async ({ member_id, dao_id, change }) => {
+            const membership = await getMembership(member_id, dao_id);
+            if (!membership) {
+                throw createError(
+                    "Membership not found",
+                    HttpStatusCode.NOT_FOUND
+                );
+            }
+
+            const newReputation = membership.reputation + change;
+
+            const { error } = await SupabaseService.getSupabase("admin")
+                .from("memberships")
+                .update({
+                    reputation: newReputation,
+                })
+                .eq("member_id", member_id)
+                .eq("dao_id", dao_id)
+                .select()
+                .single();
+
+            if (error) {
+                throw error;
+            }
+        })
+    );
 };
