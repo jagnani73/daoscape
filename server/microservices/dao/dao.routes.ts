@@ -5,7 +5,7 @@ import {
     type CreateDaoBody,
     type GetTokenDetailsBody,
 } from "./dao.schema";
-import { createDao, getAllDaos, getTokenDetails } from "./dao.service";
+import { createDao, getAllDaos, getDao, getTokenDetails } from "./dao.service";
 import {
     Router,
     type NextFunction,
@@ -21,8 +21,15 @@ const handleCreateDao = async (
     next: NextFunction
 ) => {
     try {
-        const { description, logo, name, owner_address, socials, tokens } =
-            req.body as CreateDaoBody;
+        const {
+            description,
+            logo,
+            name,
+            owner_address,
+            socials,
+            tokens,
+            tags,
+        } = req.body as CreateDaoBody;
 
         const data = await createDao({
             description,
@@ -31,6 +38,7 @@ const handleCreateDao = async (
             owner_address,
             socials,
             tokens,
+            tags,
         });
 
         res.json({
@@ -81,6 +89,24 @@ const handleGetAllDaos = async (
     }
 };
 
+const handleGetDao = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { dao_id } = req.params;
+        const data = await getDao(dao_id);
+
+        res.json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 daoRouter.post(
     "/create",
     // validateJwt(),
@@ -93,5 +119,7 @@ daoRouter.post(
     validateQuery("body", getTokenDetailsBodySchema),
     handleGetTokenDetails
 );
+
+daoRouter.get("/:dao_id", handleGetDao);
 
 daoRouter.get("/", handleGetAllDaos);

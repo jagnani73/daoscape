@@ -18,6 +18,7 @@ export const createDaoBodySchema = z.object({
         discord: z.string().trim().url().optional(),
         website: z.string().trim().url().optional(),
     }),
+    tags: z.array(z.string().trim()).optional().default([]),
 });
 
 export type CreateDaoBody = z.infer<typeof createDaoBodySchema>;

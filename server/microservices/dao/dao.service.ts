@@ -11,6 +11,7 @@ export const createDao = async ({
     owner_address,
     socials,
     tokens,
+    tags,
 }: CreateDaoBody) => {
     const member = await getMember(owner_address);
     if (!member) {
@@ -31,6 +32,7 @@ export const createDao = async ({
                 socials.website || "",
             ],
             tokens,
+            tags,
         })
         .select()
         .single();
@@ -47,7 +49,13 @@ export const createDao = async ({
 export const getDao = async (dao_id: string) => {
     const { data, error } = await SupabaseService.getSupabase("admin")
         .from("daos")
-        .select()
+        .select(
+            `   
+            *,
+            total_members:memberships(count),
+            total_proposals:proposals(count)
+        `
+        )
         .eq("dao_id", dao_id)
         .single();
 
@@ -55,19 +63,35 @@ export const getDao = async (dao_id: string) => {
         throw error;
     }
 
-    return data;
+    const transformedData = {
+        ...data,
+        total_members: data.total_members?.[0]?.count || 0,
+        total_proposals: data.total_proposals?.[0]?.count || 0,
+    };
+
+    return transformedData;
 };
 
 export const getAllDaos = async () => {
-    const { data, error } = await SupabaseService.getSupabase("admin")
-        .from("daos")
-        .select();
+    const { data, error } = await SupabaseService.getSupabase("admin").from(
+        "daos"
+    ).select(`
+            *,
+            total_members:memberships(count),
+            total_proposals:proposals(count)
+        `);
 
     if (error) {
         throw error;
     }
 
-    return data;
+    const transformedData = data?.map((dao) => ({
+        ...dao,
+        total_members: dao.total_members?.[0]?.count || 0,
+        total_proposals: dao.total_proposals?.[0]?.count || 0,
+    }));
+
+    return transformedData;
 };
 
 export const getTokenDetails = async ({
