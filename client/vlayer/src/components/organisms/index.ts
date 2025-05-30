@@ -1,0 +1,10 @@
+export * from "./ConnectWalletStep";
+export * from "./WelcomeStep";
+export * from "./ProveStep";
+export * from "./ActionSelectionStep";
+export * from "./VerifyStep";
+export * from "./SuccessStep";
+export * from "./InstallExtensionStep";
+export { ProposalsTab } from "./ProposalsTab";
+export { ProofVerificationTab } from "./ProofVerificationTab";
+export { AnalyticsTab } from "./AnalyticsTab";
