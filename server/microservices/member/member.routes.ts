@@ -1,12 +1,9 @@
 import { validateQuery } from "../../middlewares";
-import { createError, HttpStatusCode } from "../../utils/functions";
 import {
-    createUserBodySchema,
-    getMemberParamsSchema,
-    type CreateUserBody,
-    type GetMemberParams,
+    getOrCreateMemberParamsSchema,
+    type GetOrCreateMemberParams,
 } from "./member.schema";
-import { createUser, getMember } from "./member.service";
+import { getOrCreateMember } from "./member.service";
 import {
     Router,
     type NextFunction,
@@ -16,15 +13,15 @@ import {
 
 export const memberRouter = Router();
 
-const handleCreateUser = async (
+const handleGetOrCreateMember = async (
     req: Request,
     res: Response,
     next: NextFunction
 ) => {
     try {
-        const { wallet_address } = req.body as CreateUserBody;
+        const { wallet_address } = req.params as GetOrCreateMemberParams;
 
-        const data = await createUser({
+        const data = await getOrCreateMember({
             wallet_address,
         });
 
@@ -37,38 +34,8 @@ const handleCreateUser = async (
     }
 };
 
-const handleGetMember = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const { member_id } = req.params as GetMemberParams;
-
-        const data = await getMember(member_id);
-
-        if (!data) {
-            throw createError("Member not found", HttpStatusCode.NOT_FOUND);
-        }
-
-        res.json({
-            success: true,
-            data,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-memberRouter.post(
-    "/create",
-    // validateJwt(),
-    validateQuery("body", createUserBodySchema),
-    handleCreateUser
-);
-
 memberRouter.get(
-    "/:member_id",
-    validateQuery("params", getMemberParamsSchema),
-    handleGetMember
+    "/:wallet_address",
+    validateQuery("params", getOrCreateMemberParamsSchema),
+    handleGetOrCreateMember
 );
