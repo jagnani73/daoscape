@@ -32,7 +32,6 @@ export const Header: React.FC = () => {
             >
               {address ? formatAddress(address) : "Connect Wallet"}
             </Button>
-            <div className="w-8 h-8 bg-muted rounded-full"></div>
           </div>
         </div>
       </div>

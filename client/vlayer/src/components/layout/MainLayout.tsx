@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Header } from "../shared/Header";
-import { Sidebar } from "../molecules/Sidebar";
-import { ProposalsTab } from "../organisms/ProposalsTab";
-import { ProofVerificationTab } from "../organisms/ProofVerificationTab";
-import { AnalyticsTab } from "../organisms/AnalyticsTab";
+import { Sidebar } from "../shared/navigation/Sidebar";
+import { ProposalsTab } from "../features/governance/ProposalsTab";
+import { ProofVerificationTab } from "../features/proof/ProofVerificationTab";
+import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { AppState } from "../../types/common";
 import { STEP_KIND } from "../../utils/steps";
 import { useAppContext } from "../../contexts/AppContext";

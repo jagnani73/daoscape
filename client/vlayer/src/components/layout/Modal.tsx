@@ -8,7 +8,7 @@ import React, {
 import { AnimatePresence, motion } from "motion/react";
 import { useAppContext } from "../../contexts/AppContext";
 import { STEP_KIND } from "../../utils/steps";
-import { ProgressBar } from "../molecules/ProgressBar";
+import { ProgressBar } from "../features/proof/ProgressBar";
 import { Navigation } from "./Navigation";
 import { ErrorBoundary } from "react-error-boundary";
 
