@@ -49,24 +49,24 @@ export const VerificationStepCard: React.FC<VerificationStepCardProps> = ({
         <CardContent>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 border rounded-lg">
+              <div className="text-center p-4 border border-border rounded-lg">
                 <div className="text-2xl mb-2">🔗</div>
-                <h3 className="font-medium">Connect Wallet</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-medium text-foreground">Connect Wallet</h3>
+                <p className="text-sm text-muted-foreground">
                   Link your wallet to start verification
                 </p>
               </div>
-              <div className="text-center p-4 border rounded-lg">
+              <div className="text-center p-4 border border-border rounded-lg">
                 <div className="text-2xl mb-2">✅</div>
-                <h3 className="font-medium">Select Actions</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-medium text-foreground">Select Actions</h3>
+                <p className="text-sm text-muted-foreground">
                   Choose Twitter actions to verify
                 </p>
               </div>
-              <div className="text-center p-4 border rounded-lg">
+              <div className="text-center p-4 border border-border rounded-lg">
                 <div className="text-2xl mb-2">🔐</div>
-                <h3 className="font-medium">Generate Proof</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-medium text-foreground">Generate Proof</h3>
+                <p className="text-sm text-muted-foreground">
                   Create cryptographic proof
                 </p>
               </div>
@@ -118,11 +118,11 @@ export const VerificationStepCard: React.FC<VerificationStepCardProps> = ({
           currentStep?.kind !== STEP_KIND.WELCOME &&
           currentStep?.kind !== STEP_KIND.SUCCESS && (
             <div className="mt-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <span>Step {currentStep?.index || 0} of 5</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div className="flex-1 bg-muted rounded-full h-2">
                   <div
-                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
                     style={{
                       width: `${((currentStep?.index || 0) / 5) * 100}%`,
                     }}

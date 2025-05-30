@@ -56,7 +56,7 @@ export const ProposalsTab: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900">PROPOSALS</h2>
+        <h2 className="text-lg font-semibold text-foreground">PROPOSALS</h2>
       </div>
 
       {mockProposals.map((proposal) => (

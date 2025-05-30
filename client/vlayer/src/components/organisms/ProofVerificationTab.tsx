@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -25,13 +26,48 @@ export const ProofVerificationTab: React.FC<ProofVerificationTabProps> = ({
     goToStepByKind(STEP_KIND.WELCOME);
   };
 
+  if (state.showHomepage) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Proof Verification
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Verify your Twitter account ownership using vlayer Web Proofs to
+            participate in governance.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Get Started with Proof Verification</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Connect your Twitter account and generate a cryptographic proof of
+              ownership to unlock governance features.
+            </p>
+            <Button onClick={onStartProofVerification}>
+              Start Verification Process
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="text-center py-8 text-muted-foreground">
+          No verification in progress
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
           Proof Verification
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           Verify Twitter actions and generate cryptographic proofs for
           governance participation.
         </p>
@@ -51,7 +87,7 @@ export const ProofVerificationTab: React.FC<ProofVerificationTabProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <div className="text-4xl mb-2">📋</div>
             <p>No verifications yet</p>
             <p className="text-sm">

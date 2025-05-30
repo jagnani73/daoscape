@@ -2,47 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-.steps .step:after, .steps .step:before{
-  background-color: #f4f7fb;
-  color: #000;
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.5rem;
+  }
 }
 
-.steps .step-primary + .step-primary:before, .steps .step-primary:after {
-  background-color: #3d1efe;
-  color: #fff;
+* {
+  border-color: hsl(var(--border));
 }
 
-.btn:disabled {
-  color: #333;
-}
-
-:root {
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #473e3e;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+.steps .step:after, .steps .step:before{
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
 
+.steps .step-primary + .step-primary:before, .steps .step-primary:after {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.btn:disabled {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
 
 #nextButton {
-  @apply btn w-[188px] px-4 bg-[#915bf8] rounded-lg border-none text-white hover:bg-[#915bf8]/80 hover:text-white
+  @apply btn w-[188px] px-4 bg-primary rounded-lg border-none text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground
 }
 
 .header {
-  @apply text-center text-black text-3xl font-bold mt-7;
+  @apply text-center text-foreground text-3xl font-bold mt-7;
   transition: all 0.3s ease-in-out;
 }
 
 .desc {
-  @apply text-center font-normal text-lg text-gray-500 py-4;
+  @apply text-center font-normal text-lg text-muted-foreground py-4;
   transition: all 0.3s ease-in-out;
 }
 

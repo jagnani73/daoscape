@@ -25,7 +25,7 @@ export const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -38,7 +38,7 @@ export const MainLayout: React.FC = () => {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-3 bg-muted">
                 <TabsTrigger value="proposals">Proposals</TabsTrigger>
                 <TabsTrigger value="proof-verification">
                   Proof Verification

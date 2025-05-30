@@ -8,26 +8,26 @@ import {
 } from "../ui/card";
 import { AnalyticsCard } from "../molecules/AnalyticsCard";
 
-const analyticsData = [
+const mockAnalytics = [
   {
     title: "Total Proposals",
-    value: 24,
-    subtitle: "+2 from last month",
+    value: "24",
+    subtitle: "+2 this month",
   },
   {
-    title: "Active Votes",
-    value: 91,
-    subtitle: "Across 4 proposals",
-  },
-  {
-    title: "Verified Proofs",
-    value: 156,
-    subtitle: "+12 this week",
+    title: "Active Voters",
+    value: "1,234",
+    subtitle: "+12% from last month",
   },
   {
     title: "Participation Rate",
-    value: "78%",
-    subtitle: "Above average",
+    value: "68%",
+    subtitle: "+5% from last month",
+  },
+  {
+    title: "Treasury Balance",
+    value: "$2.4M",
+    subtitle: "Across all assets",
   },
 ];
 
@@ -35,20 +35,21 @@ export const AnalyticsTab: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Analytics</h2>
-        <p className="text-gray-600 mb-6">
-          View governance participation metrics and proof verification
-          statistics.
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          Analytics
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Track governance metrics and participation across the platform.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {analyticsData.map((data, index) => (
+        {mockAnalytics.map((item, index) => (
           <AnalyticsCard
             key={index}
-            title={data.title}
-            value={data.value}
-            subtitle={data.subtitle}
+            title={item.title}
+            value={item.value}
+            subtitle={item.subtitle}
           />
         ))}
       </div>
