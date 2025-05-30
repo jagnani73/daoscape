@@ -13,6 +13,11 @@ export const createUser = async ({ wallet_address }: CreateUserBody) => {
         .single();
 
     if (error) {
+        const existingMember = await getMember(wallet_address);
+        if (existingMember) {
+            return existingMember;
+        }
+
         throw error;
     }
 
