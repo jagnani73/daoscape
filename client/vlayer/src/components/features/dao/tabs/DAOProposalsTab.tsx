@@ -5,16 +5,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { CreateProposal } from "./CreateProposal";
-import { Proposal } from "../types/dao";
+} from "../../../ui/card";
+import { Badge } from "../../../ui/badge";
+import { Button } from "../../../ui/button";
+import { CreateProposal } from "../proposals/CreateProposal";
+import { Proposal } from "../../../../types/dao";
 import {
   formatDateTime,
   getProposalStatusBadgeProps,
   getProposalPhase,
-} from "../utils/daoHelpers";
+} from "../../../../utils/daoHelpers";
+import { daoService } from "../../../../services/daoService";
 
 interface DAOProposalsTabProps {
   proposals: Proposal[] | undefined;
@@ -40,7 +41,6 @@ const sortProposals = (
     const phaseB = getProposalPhase(b);
 
     if (showOnlyActive) {
-      // For active proposals, prioritize by phase and proximity
       const phaseOrder = { voting: 0, feedback: 1, upcoming: 2 };
       const orderA = phaseOrder[phaseA as keyof typeof phaseOrder] ?? 3;
       const orderB = phaseOrder[phaseB as keyof typeof phaseOrder] ?? 3;
@@ -49,38 +49,31 @@ const sortProposals = (
         return orderA - orderB;
       }
 
-      // Within same phase, sort by proximity to current time
       if (phaseA === "upcoming") {
-        // For upcoming, sort by voting start time (closest first)
         return (
           new Date(a.voting_start).getTime() -
           new Date(b.voting_start).getTime()
         );
       } else if (phaseA === "voting") {
-        // For voting, sort by voting end time (ending soonest first)
         return (
           new Date(a.voting_end).getTime() - new Date(b.voting_end).getTime()
         );
       } else if (phaseA === "feedback") {
-        // For feedback, sort by feedback end time (ending soonest first)
         return (
           new Date(a.feedback_end).getTime() -
           new Date(b.feedback_end).getTime()
         );
       }
     } else {
-      // For ended proposals, sort by most recent end time first
       return (
         new Date(b.feedback_end).getTime() - new Date(a.feedback_end).getTime()
       );
     }
 
-    // Fallback to creation date
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 };
 
-// Helper function to get phase badge
 const getPhaseBadge = (proposal: Proposal) => {
   const phase = getProposalPhase(proposal);
   const now = new Date();
@@ -128,6 +121,84 @@ export const DAOProposalsTab: React.FC<DAOProposalsTabProps> = ({
   showOnlyActive = true,
 }) => {
   const sortedProposals = sortProposals(proposals || [], showOnlyActive);
+  const [isCheckingConclusions, setIsCheckingConclusions] =
+    React.useState(false);
+
+  React.useEffect(() => {
+    const checkAndConcludeProposals = async () => {
+      if (!proposals || proposals.length === 0) return;
+
+      try {
+        const result = await daoService.autoConcludeProposals(proposals);
+
+        if (result.total > 0) {
+          console.log(
+            `🔄 Checked ${proposals.length} proposals, concluded ${result.total} phases`
+          );
+
+          const successfulConclusions = result.concluded.filter(
+            (r) => r.success
+          );
+          if (successfulConclusions.length > 0) {
+            console.log(
+              `✅ Successfully concluded ${successfulConclusions.length} proposal phases`
+            );
+            // Trigger a refresh of the proposals data
+            onProposalCreated();
+          }
+
+          // Log any failures
+          const failures = result.concluded.filter((r) => !r.success);
+          if (failures.length > 0) {
+            console.warn(
+              `⚠️ Failed to conclude ${failures.length} proposal phases:`,
+              failures
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error during auto-conclusion check:", error);
+      }
+    };
+
+    // Run the check when proposals change
+    checkAndConcludeProposals();
+  }, [proposals, onProposalCreated]);
+
+  // Manual conclusion check for owners
+  const handleManualConclusionCheck = async () => {
+    if (!proposals || proposals.length === 0) return;
+
+    setIsCheckingConclusions(true);
+    try {
+      const result = await daoService.autoConcludeProposals(proposals);
+
+      if (result.total > 0) {
+        const successfulConclusions = result.concluded.filter((r) => r.success);
+        if (successfulConclusions.length > 0) {
+          onProposalCreated(); // Refresh data
+        }
+
+        // Show a simple alert with results
+        alert(
+          `Conclusion check complete:\n✅ ${
+            successfulConclusions.length
+          } phases concluded\n❌ ${
+            result.concluded.filter((r) => !r.success).length
+          } failures`
+        );
+      } else {
+        alert("No proposals needed conclusion at this time.");
+      }
+    } catch (error) {
+      console.error("Error during manual conclusion check:", error);
+      alert(
+        "Error occurred during conclusion check. Check console for details."
+      );
+    } finally {
+      setIsCheckingConclusions(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -138,6 +209,31 @@ export const DAOProposalsTab: React.FC<DAOProposalsTabProps> = ({
           daoName={daoName}
           onProposalCreated={onProposalCreated}
         />
+      )}
+
+      {/* Manual Conclusion Check - Only for owners */}
+      {isOwner && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Admin Tools</CardTitle>
+            <CardDescription className="text-xs">
+              Manually check and conclude proposals that have exceeded their
+              time limits
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleManualConclusionCheck}
+              disabled={isCheckingConclusions}
+              size="sm"
+              variant="outline"
+            >
+              {isCheckingConclusions
+                ? "Checking..."
+                : "🔄 Check & Conclude Proposals"}
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Proposals List */}

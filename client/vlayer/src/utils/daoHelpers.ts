@@ -208,3 +208,34 @@ export const getProposalPhase = (
   if (now <= feedbackEnd) return "feedback";
   return "ended";
 };
+
+// Check if a proposal's voting period has ended but hasn't been concluded
+export const needsVotingConclusion = (proposal: Proposal): boolean => {
+  const now = new Date();
+  const votingEnd = new Date(proposal.voting_end);
+  return now > votingEnd && !proposal.conclusion;
+};
+
+// Check if a proposal's feedback period has ended but hasn't been concluded
+export const needsFeedbackConclusion = (proposal: Proposal): boolean => {
+  const now = new Date();
+  const feedbackEnd = new Date(proposal.feedback_end);
+  return now > feedbackEnd && !proposal.feedback_conclusion;
+};
+
+// Get all proposals that need conclusion (either voting or feedback)
+export const getProposalsNeedingConclusion = (
+  proposals: Proposal[]
+): Array<{
+  proposal: Proposal;
+  needsVoting: boolean;
+  needsFeedback: boolean;
+}> => {
+  return proposals
+    .map((proposal) => ({
+      proposal,
+      needsVoting: needsVotingConclusion(proposal),
+      needsFeedback: needsFeedbackConclusion(proposal),
+    }))
+    .filter(({ needsVoting, needsFeedback }) => needsVoting || needsFeedback);
+};

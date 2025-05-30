@@ -5,17 +5,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { TokenDetailsCard } from "./TokenDetailsCard";
-import { JoinDAOButton } from "./JoinDAOButton";
-import { DAO, MembershipStatus } from "../types/dao";
+} from "../../../ui/card";
+import { Button } from "../../../ui/button";
+import { Badge } from "../../../ui/badge";
+import { TokenDetailsCard } from "../../../TokenDetailsCard";
+import { JoinDAOButton } from "../details/JoinDAOButton";
+import { DAO, MembershipStatus } from "../../../../types/dao";
 import {
   canShowJoinButton,
   isDAOMember,
   formatDate,
-} from "../utils/daoHelpers";
+} from "../../../../utils/daoHelpers";
 
 interface DAODetailsTabProps {
   dao: DAO;

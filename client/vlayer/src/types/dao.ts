@@ -161,6 +161,17 @@ export interface VoteResponse {
   message?: string;
 }
 
+export interface ConcludeProposalRequest {
+  proposal_id: string;
+  is_feedback: boolean;
+}
+
+export interface ConcludeProposalResponse {
+  success: boolean;
+  message?: string;
+  data?: Proposal;
+}
+
 export enum VoteType {
   YES = "YES",
   NO = "NO",

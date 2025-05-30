@@ -14,9 +14,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { DAODetailsTab } from "../components/DAODetailsTab";
-import { DAOMembersTab } from "../components/DAOMembersTab";
-import { DAOProposalsTab } from "../components/DAOProposalsTab";
+import { DAODetailsTab } from "../components/features/dao/tabs/DAODetailsTab";
+import { DAOMembersTab } from "../components/features/dao/tabs/DAOMembersTab";
+import { DAOProposalsTab } from "../components/features/dao/tabs/DAOProposalsTab";
 import { ProposalPage } from "./ProposalPage";
 import { DAO, MembershipStatus } from "../types/dao";
 import { daoService } from "../services/daoService";

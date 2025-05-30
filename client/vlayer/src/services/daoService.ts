@@ -13,6 +13,9 @@ import {
   ProposalDetailResponse,
   VoteRequest,
   VoteResponse,
+  ConcludeProposalRequest,
+  ConcludeProposalResponse,
+  Proposal,
 } from "../types/dao";
 
 const API_BASE_URL = import.meta.env.VITE_BE_API_URL;
@@ -360,5 +363,169 @@ export const daoService = {
         message: error instanceof Error ? error.message : "Failed to cast vote",
       };
     }
+  },
+
+  concludeProposal: async (
+    concludeData: ConcludeProposalRequest
+  ): Promise<ConcludeProposalResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/proposal/conclude`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(concludeData),
+      });
+
+      const data: ConcludeProposalResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error concluding proposal:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to conclude proposal",
+      };
+    }
+  },
+
+  // Automatically conclude proposals that have exceeded their time limits
+  autoConcludeProposals: async (
+    proposals: Proposal[]
+  ): Promise<{
+    concluded: Array<{
+      proposalId: string;
+      type: "voting" | "feedback";
+      success: boolean;
+      error?: string;
+    }>;
+    total: number;
+  }> => {
+    const results: Array<{
+      proposalId: string;
+      type: "voting" | "feedback";
+      success: boolean;
+      error?: string;
+    }> = [];
+
+    for (const proposal of proposals) {
+      const now = new Date();
+      const votingEnd = new Date(proposal.voting_end);
+      const feedbackEnd = new Date(proposal.feedback_end);
+
+      // Check if voting needs to be concluded
+      if (now > votingEnd && !proposal.conclusion) {
+        try {
+          const result = await daoService.concludeProposal({
+            proposal_id: proposal.proposal_id,
+            is_feedback: false,
+          });
+
+          results.push({
+            proposalId: proposal.proposal_id,
+            type: "voting",
+            success: result.success,
+            error: result.success ? undefined : result.message,
+          });
+
+          if (result.success) {
+            console.log(
+              `✅ Auto-concluded voting for proposal ${proposal.proposal_id.slice(
+                0,
+                8
+              )}...`
+            );
+          } else {
+            console.error(
+              `❌ Failed to conclude voting for proposal ${proposal.proposal_id.slice(
+                0,
+                8
+              )}...:`,
+              result.message
+            );
+          }
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          results.push({
+            proposalId: proposal.proposal_id,
+            type: "voting",
+            success: false,
+            error: errorMessage,
+          });
+          console.error(
+            `❌ Error concluding voting for proposal ${proposal.proposal_id.slice(
+              0,
+              8
+            )}...:`,
+            errorMessage
+          );
+        }
+      }
+
+      // Check if feedback needs to be concluded
+      if (now > feedbackEnd && !proposal.feedback_conclusion) {
+        try {
+          const result = await daoService.concludeProposal({
+            proposal_id: proposal.proposal_id,
+            is_feedback: true,
+          });
+
+          results.push({
+            proposalId: proposal.proposal_id,
+            type: "feedback",
+            success: result.success,
+            error: result.success ? undefined : result.message,
+          });
+
+          if (result.success) {
+            console.log(
+              `✅ Auto-concluded feedback for proposal ${proposal.proposal_id.slice(
+                0,
+                8
+              )}...`
+            );
+          } else {
+            console.error(
+              `❌ Failed to conclude feedback for proposal ${proposal.proposal_id.slice(
+                0,
+                8
+              )}...:`,
+              result.message
+            );
+          }
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          results.push({
+            proposalId: proposal.proposal_id,
+            type: "feedback",
+            success: false,
+            error: errorMessage,
+          });
+          console.error(
+            `❌ Error concluding feedback for proposal ${proposal.proposal_id.slice(
+              0,
+              8
+            )}...:`,
+            errorMessage
+          );
+        }
+      }
+    }
+
+    return {
+      concluded: results,
+      total: results.length,
+    };
   },
 };

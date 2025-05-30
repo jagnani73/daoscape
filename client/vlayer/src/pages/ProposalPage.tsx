@@ -78,6 +78,40 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
             setUserMember(member || null);
           }
         }
+
+        // Auto-conclude proposal if needed
+        try {
+          const result = await daoService.autoConcludeProposals([
+            proposalResponse.data,
+          ]);
+          if (result.total > 0) {
+            console.log(
+              `🔄 Auto-conclusion check for proposal ${proposalId.slice(
+                0,
+                8
+              )}...`
+            );
+
+            const successfulConclusions = result.concluded.filter(
+              (r) => r.success
+            );
+            if (successfulConclusions.length > 0) {
+              console.log(
+                `✅ Auto-concluded ${successfulConclusions.length} phases for proposal`
+              );
+              // Reload the proposal to get updated data
+              const updatedProposal = await daoService.getProposalById(
+                proposalId
+              );
+              if (updatedProposal.success && updatedProposal.data) {
+                setProposal(updatedProposal.data);
+              }
+            }
+          }
+        } catch (conclusionError) {
+          console.error("Error during auto-conclusion check:", conclusionError);
+          // Don't fail the whole load if conclusion fails
+        }
       } catch (error) {
         console.error("Error loading proposal details:", error);
         setError("Failed to load proposal details");

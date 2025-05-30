@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { daoService } from "../services/daoService";
+import { Button } from "../../../ui/button";
+import { daoService } from "../../../../services/daoService";
 
 interface JoinDAOButtonProps {
   daoId: string;
@@ -36,7 +36,6 @@ export const JoinDAOButton: React.FC<JoinDAOButtonProps> = ({
         !memberResult.message?.toLowerCase().includes("duplicate")
       ) {
         console.warn("Failed to create/verify member:", memberResult.message);
-        // Continue anyway, as the member might already exist
       }
 
       // Then join the DAO
