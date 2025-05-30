@@ -52,8 +52,8 @@ export const getDao = async (dao_id: string) => {
         .select(
             `   
             *,
-            total_members:memberships(count),
-            total_proposals:proposals(count)
+            memberships(*),
+            proposals(*)
         `
         )
         .eq("dao_id", dao_id)
@@ -65,8 +65,8 @@ export const getDao = async (dao_id: string) => {
 
     const transformedData = {
         ...data,
-        total_members: data.total_members?.[0]?.count || 0,
-        total_proposals: data.total_proposals?.[0]?.count || 0,
+        members: data.memberships,
+        proposals: data.proposals,
     };
 
     return transformedData;
@@ -77,8 +77,8 @@ export const getAllDaos = async () => {
         "daos"
     ).select(`
             *,
-            total_members:memberships(count),
-            total_proposals:proposals(count)
+            memberships(*),
+            proposals(*)
         `);
 
     if (error) {
@@ -87,8 +87,10 @@ export const getAllDaos = async () => {
 
     const transformedData = data?.map((dao) => ({
         ...dao,
-        total_members: dao.total_members?.[0]?.count || 0,
-        total_proposals: dao.total_proposals?.[0]?.count || 0,
+        total_members: dao.memberships?.length || 0,
+        total_proposals: dao.proposals?.length || 0,
+        members: dao.memberships || [],
+        proposals: dao.proposals || [],
     }));
 
     return transformedData;

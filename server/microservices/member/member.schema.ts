@@ -6,3 +6,9 @@ export const createUserBodySchema = z.object({
 });
 
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;
+
+export const getMemberParamsSchema = z.object({
+    member_id: evmAddressSchema,
+});
+
+export type GetMemberParams = z.infer<typeof getMemberParamsSchema>;

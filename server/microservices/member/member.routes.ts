@@ -1,6 +1,12 @@
 import { validateQuery } from "../../middlewares";
-import { createUserBodySchema, type CreateUserBody } from "./member.schema";
-import { createUser } from "./member.service";
+import { createError, HttpStatusCode } from "../../utils/functions";
+import {
+    createUserBodySchema,
+    getMemberParamsSchema,
+    type CreateUserBody,
+    type GetMemberParams,
+} from "./member.schema";
+import { createUser, getMember } from "./member.service";
 import {
     Router,
     type NextFunction,
@@ -31,9 +37,38 @@ const handleCreateUser = async (
     }
 };
 
+const handleGetMember = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { member_id } = req.params as GetMemberParams;
+
+        const data = await getMember(member_id);
+
+        if (!data) {
+            throw createError("Member not found", HttpStatusCode.NOT_FOUND);
+        }
+
+        res.json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 memberRouter.post(
     "/create",
     // validateJwt(),
     validateQuery("body", createUserBodySchema),
     handleCreateUser
+);
+
+memberRouter.get(
+    "/:member_id",
+    validateQuery("params", getMemberParamsSchema),
+    handleGetMember
 );
