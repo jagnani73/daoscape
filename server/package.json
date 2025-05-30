@@ -1,0 +1,46 @@
+{
+    "name": "lol",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "dev": "pnpm types && tsc-watch --onSuccess \"pnpm run start\"",
+        "lint": "eslint .",
+        "pretty": "prettier . --write",
+        "start": "node ./dist/api/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "types:database": "ts-node scripts/generate-types.ts",
+        "types": "pnpm run types:database"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@eslint/eslintrc": "^3.3.0",
+        "@eslint/js": "^9.21.0",
+        "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/jsonwebtoken": "^9.0.9",
+        "@types/node": "^22.13.8",
+        "@typescript-eslint/eslint-plugin": "^8.25.0",
+        "@typescript-eslint/parser": "^8.25.0",
+        "eslint": "^9.21.0",
+        "eslint-config-prettier": "^10.0.2",
+        "eslint-plugin-prettier": "^5.2.3",
+        "prettier": "^3.5.3",
+        "ts-node": "^10.9.2",
+        "tsc-watch": "^6.2.1",
+        "typescript": "5.7.3"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.49.7",
+        "axios": "^1.9.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "jsonwebtoken": "^9.0.2",
+        "zod": "^3.24.2"
+    }
+}
