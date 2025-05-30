@@ -5,6 +5,7 @@ import { Sidebar } from "../shared/navigation/Sidebar";
 import { ProposalsTab } from "../features/governance/ProposalsTab";
 import { ProofVerificationTab } from "../features/proof/ProofVerificationTab";
 import { AnalyticsTab } from "../features/governance/AnalyticsTab";
+import { DAOTab } from "../features/dao/DAOTab";
 import { ProfilePage } from "../../pages/ProfilePage";
 import { STEP_KIND } from "../../utils/steps";
 import { useAppContext } from "../../contexts/AppContext";
@@ -38,8 +39,9 @@ export const MainLayout: React.FC = () => {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4 bg-muted">
+              <TabsList className="grid w-full grid-cols-5 bg-muted">
                 <TabsTrigger value="proposals">Proposals</TabsTrigger>
+                <TabsTrigger value="daos">DAOs</TabsTrigger>
                 <TabsTrigger value="proof-verification">
                   Proof Verification
                 </TabsTrigger>
@@ -49,6 +51,10 @@ export const MainLayout: React.FC = () => {
 
               <TabsContent value="proposals" className="mt-6">
                 <ProposalsTab />
+              </TabsContent>
+
+              <TabsContent value="daos" className="mt-6">
+                <DAOTab />
               </TabsContent>
 
               <TabsContent value="proof-verification" className="mt-6">

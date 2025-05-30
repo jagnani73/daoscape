@@ -26,6 +26,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         >
           🏠 Home
         </button>
+        <button
+          onClick={() => handleNavClick("daos")}
+          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
+            activeTab === "daos"
+              ? "text-foreground bg-muted"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          🏛️ DAOs
+        </button>
         <a
           href="#"
           className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"

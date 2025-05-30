@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_WS_PROXY_URL: string;
   readonly VITE_VLAYER_API_TOKEN: string;
   readonly VITE_CHAIN_NAME: string;
+  readonly VITE_BE_API_URL: string;
 }
 
 interface ImportMeta {

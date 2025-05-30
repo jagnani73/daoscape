@@ -47,6 +47,12 @@ interface ActivityLog {
   timestamp: string;
 }
 
+interface StoredAuthData {
+  token: string;
+  address: string;
+  expiresAt: number;
+}
+
 const ProfileContent: React.FC = () => {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
@@ -61,9 +67,57 @@ const ProfileContent: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+  const STORAGE_KEY = "blockscout_auth_data";
 
   const getAvatarUrl = (address: string) => {
     return `https://api.dicebear.com/7.x/identicon/svg?seed=${address}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+  };
+
+  // Load stored authentication data
+  const loadStoredAuth = (userAddress: string): string | null => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+
+      const authData: StoredAuthData = JSON.parse(stored);
+
+      // Check if token is for the same address and not expired
+      if (
+        authData.address.toLowerCase() === userAddress.toLowerCase() &&
+        authData.expiresAt > Date.now()
+      ) {
+        return authData.token;
+      }
+
+      // Remove expired or mismatched token
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    } catch (error) {
+      console.error("Error loading stored auth:", error);
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+  };
+
+  // Store authentication data
+  const storeAuthData = (token: string, userAddress: string) => {
+    try {
+      const authData: StoredAuthData = {
+        token,
+        address: userAddress,
+        expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(authData));
+    } catch (error) {
+      console.error("Error storing auth data:", error);
+    }
+  };
+
+  // Clear stored authentication data
+  const clearStoredAuth = () => {
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const fetchMeritsData = async (userAddress: string) => {
@@ -96,7 +150,7 @@ const ProfileContent: React.FC = () => {
     }
   };
 
-  const authenticateUser = async () => {
+  const authenticateUser = async (showPrompt = true) => {
     if (!address || !chainId) {
       setError("Please connect your wallet first");
       return;
@@ -105,28 +159,28 @@ const ProfileContent: React.FC = () => {
     try {
       setIsAuthenticating(true);
       setError(null);
+      setShowAuthPrompt(false);
 
-      // Step 1: Get nonce from Blockscout
       const nonce = await getBlockscoutNonce();
-
-      // Step 2: Create SIWE message
       const message = createSIWEMessage(address, nonce, chainId);
-
-      // Step 3: Sign the message
       const signature = await signMessageAsync({ message });
-
-      // Step 4: Authenticate with Blockscout
       const token = await authenticateWithBlockscout(nonce, message, signature);
 
-      // Step 5: Store token and set authenticated state
       setAuthToken(token);
       setIsAuthenticated(true);
+      storeAuthData(token, address);
 
-      // Step 6: Fetch authenticated user data
       await fetchAuthenticatedData(token);
     } catch (err: any) {
       console.error("Authentication error:", err);
-      setError(`Authentication failed: ${err.message}`);
+      if (err.message.includes("User rejected")) {
+        setError("Authentication cancelled by user");
+      } else {
+        setError(`Authentication failed: ${err.message}`);
+      }
+      if (showPrompt) {
+        setShowAuthPrompt(true);
+      }
     } finally {
       setIsAuthenticating(false);
     }
@@ -134,16 +188,22 @@ const ProfileContent: React.FC = () => {
 
   const fetchAuthenticatedData = async (token: string) => {
     try {
-      // Fetch detailed balance information
       const balanceData = await getAuthenticatedUserData(token);
       setUserBalance(balanceData);
 
-      // Fetch activity logs
       const logsData = await getUserActivityLogs(token);
       setActivityLogs(logsData.items || []);
     } catch (err: any) {
       console.error("Error fetching authenticated data:", err);
-      setError(`Failed to fetch authenticated data: ${err.message}`);
+      // If token is invalid, clear it and show auth prompt
+      if (err.message.includes("401") || err.message.includes("Unauthorized")) {
+        clearStoredAuth();
+        setAuthToken(null);
+        setIsAuthenticated(false);
+        setShowAuthPrompt(true);
+      } else {
+        setError(`Failed to fetch authenticated data: ${err.message}`);
+      }
     }
   };
 
@@ -152,27 +212,49 @@ const ProfileContent: React.FC = () => {
     setIsAuthenticated(false);
     setUserBalance(null);
     setActivityLogs([]);
+    setShowAuthPrompt(false);
+    clearStoredAuth();
   };
 
   const showTransactionHistory = () => {
     if (address) {
       openPopup({
-        chainId: "84532", // Base Sepolia chain ID
+        chainId: "84532",
         address: address,
       });
     }
   };
 
-  // Show all chain transactions
   const showAllTransactions = () => {
     openPopup({
-      chainId: "84532", // Base Sepolia chain ID
+      chainId: "84532",
     });
   };
 
+  // Check for stored authentication when address changes
   useEffect(() => {
     if (address && isConnected) {
       fetchMeritsData(address);
+
+      // Try to load stored authentication
+      const storedToken = loadStoredAuth(address);
+      if (storedToken) {
+        setAuthToken(storedToken);
+        setIsAuthenticated(true);
+        fetchAuthenticatedData(storedToken);
+      } else {
+        // Show authentication prompt automatically
+        setShowAuthPrompt(true);
+      }
+    } else {
+      // Clear state when wallet disconnected
+      setMeritsData(null);
+      setUserBalance(null);
+      setActivityLogs([]);
+      setIsAuthenticated(false);
+      setAuthToken(null);
+      setShowAuthPrompt(false);
+      setError(null);
     }
   }, [address, isConnected]);
 
@@ -220,7 +302,7 @@ const ProfileContent: React.FC = () => {
                 </>
               ) : (
                 <Button
-                  onClick={authenticateUser}
+                  onClick={() => authenticateUser(true)}
                   disabled={isAuthenticating}
                   size="sm"
                 >
@@ -234,11 +316,55 @@ const ProfileContent: React.FC = () => {
         </CardHeader>
       </Card>
 
+      {/* Authentication Prompt */}
+      {showAuthPrompt && !isAuthenticated && !isAuthenticating && (
+        <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                  Sign in to access enhanced features
+                </h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Get detailed balance information, activity logs, and more by
+                  signing in with your wallet.
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAuthPrompt(false)}
+                >
+                  Dismiss
+                </Button>
+                <Button
+                  onClick={() => authenticateUser(true)}
+                  disabled={isAuthenticating}
+                  size="sm"
+                >
+                  {isAuthenticating ? "Signing..." : "Sign In"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Authentication Error */}
       {error && (
         <Card className="border-destructive">
           <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setError(null)}
+              >
+                Dismiss
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
