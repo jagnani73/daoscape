@@ -102,7 +102,6 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
       });
 
       if (response.success) {
-        // Reload proposal to get updated votes
         const updatedProposal = await daoService.getProposalById(proposalId);
         if (updatedProposal.success && updatedProposal.data) {
           setProposal(updatedProposal.data);

@@ -1,4 +1,9 @@
-import { MembershipStatus, ProposalWithVotes, Vote } from "../types/dao";
+import {
+  MembershipStatus,
+  Proposal,
+  ProposalWithVotes,
+  Vote,
+} from "../types/dao";
 
 export const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -191,7 +196,7 @@ export const getVoteCounts = (
 };
 
 export const getProposalPhase = (
-  proposal: ProposalWithVotes
+  proposal: Proposal | ProposalWithVotes
 ): "upcoming" | "voting" | "feedback" | "ended" => {
   const now = new Date();
   const votingStart = new Date(proposal.voting_start);

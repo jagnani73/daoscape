@@ -26,6 +26,7 @@ import {
   getMembershipStatusBadgeProps,
   isDAOOwner,
   isDAOMember,
+  getProposalPhase,
 } from "../utils/daoHelpers";
 
 interface DAODetailPageProps {
@@ -52,6 +53,19 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
   const isOwner =
     dao && address ? isDAOOwner(address, dao.owner_address) : false;
   const isMember = isDAOMember(membershipStatus);
+
+  // Filter proposals by status
+  const activeProposals =
+    dao?.proposals?.filter((proposal) => {
+      const phase = getProposalPhase(proposal);
+      return phase === "upcoming" || phase === "voting" || phase === "feedback";
+    }) || [];
+
+  const endedProposals =
+    dao?.proposals?.filter((proposal) => {
+      const phase = getProposalPhase(proposal);
+      return phase === "ended";
+    }) || [];
 
   useEffect(() => {
     const loadDAODetails = async () => {
@@ -243,18 +257,21 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="details">DAO Details</TabsTrigger>
           <TabsTrigger value="members">
             Members ({dao.members?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="proposals">
-            Proposals ({dao.proposals?.length || 0})
+            Active Proposals ({activeProposals.length})
             {isOwner && viewMode === "owner" && (
               <Badge className="ml-2 bg-purple-100 text-purple-800 border-purple-200 text-xs">
                 Owner
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="ended-proposals">
+            Ended Proposals ({endedProposals.length})
           </TabsTrigger>
         </TabsList>
 
@@ -277,15 +294,29 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
           <DAOMembersTab members={dao.members} daoName={dao.name} />
         </TabsContent>
 
-        {/* Proposals Tab */}
+        {/* Active Proposals Tab */}
         <TabsContent value="proposals" className="space-y-6">
           <DAOProposalsTab
-            proposals={dao.proposals}
+            proposals={activeProposals}
             daoId={dao.dao_id}
             daoName={dao.name}
             isOwner={isOwner && viewMode === "owner"}
             onProposalCreated={handleProposalCreated}
             onProposalClick={handleProposalClick}
+            showOnlyActive={true}
+          />
+        </TabsContent>
+
+        {/* Ended Proposals Tab */}
+        <TabsContent value="ended-proposals" className="space-y-6">
+          <DAOProposalsTab
+            proposals={endedProposals}
+            daoId={dao.dao_id}
+            daoName={dao.name}
+            isOwner={false} // Don't show create proposal for ended proposals
+            onProposalCreated={handleProposalCreated}
+            onProposalClick={handleProposalClick}
+            showOnlyActive={false}
           />
         </TabsContent>
       </Tabs>
