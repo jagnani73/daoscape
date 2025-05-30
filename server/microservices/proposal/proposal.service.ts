@@ -5,6 +5,7 @@ import {
     MERITS_PER_PROPOSAL,
     SUPABASE_0_ROWS_ERROR_CODE,
     VOTE_TYPES,
+    type HOUSES,
 } from "../../utils/constants";
 import {
     createError,
@@ -120,7 +121,11 @@ export const concludeProposal = async (
         }
     }
 
-    const votes = await getVotesForProposal(proposal_id, is_feedback);
+    const votes = await getVotesForProposal(
+        proposal_id,
+        is_feedback,
+        proposal.voting_house as HOUSES
+    );
 
     let weightedYes: number = 0;
     let weightedNo: number = 0;

@@ -1,12 +1,12 @@
 import { SupabaseService } from "../../services";
-import { SUPABASE_0_ROWS_ERROR_CODE } from "../../utils/constants";
+import { SUPABASE_0_ROWS_ERROR_CODE, type HOUSES } from "../../utils/constants";
 import { createError, HttpStatusCode } from "../../utils/functions";
 import { getMember } from "../member/member.service";
 import { getMemberships } from "../membership/membership.service";
 import { getProposal } from "../proposal/proposal.service";
 import type { CastVoteBody } from "./vote.schema";
 
-export const getVoteViaMemberId = async (
+export const getVote = async (
     proposal_id: string,
     member_id: string,
     is_feedback: boolean
@@ -26,26 +26,6 @@ export const getVoteViaMemberId = async (
     return data;
 };
 
-export const getVoteViaWalletAddress = async (
-    proposal_id: string,
-    wallet_address: string,
-    is_feedback: boolean
-) => {
-    const member = await getMember(wallet_address);
-
-    if (!member) {
-        throw createError("Member not found", HttpStatusCode.NOT_FOUND);
-    }
-
-    const vote = await getVoteViaMemberId(
-        proposal_id,
-        member.member_id,
-        is_feedback
-    );
-
-    return vote;
-};
-
 export const castVote = async ({
     proposal_id,
     wallet_address,
@@ -57,7 +37,7 @@ export const castVote = async ({
         throw createError("Proposal not found", HttpStatusCode.NOT_FOUND);
     }
 
-    const existingVote = await getVoteViaWalletAddress(
+    const existingVote = await getVote(
         proposal_id,
         wallet_address,
         is_feedback
@@ -115,7 +95,7 @@ export const castVote = async ({
             proposal_id,
             member_id: member.member_id,
             vote,
-            // TODO: calculate weight
+            dao_id: proposal.dao_id,
             weight: is_feedback ? 1 : 100,
         })
         .select()
@@ -130,13 +110,20 @@ export const castVote = async ({
 
 export const getVotesForProposal = async (
     proposal_id: string,
-    is_feedback: boolean
+    is_feedback: boolean,
+    house?: HOUSES | null
 ) => {
-    const { data, error } = await SupabaseService.getSupabase("admin")
+    let query = SupabaseService.getSupabase("admin")
         .from("votes")
         .select()
         .eq("proposal_id", proposal_id)
         .eq("is_feedback", is_feedback);
+
+    if (!is_feedback && house) {
+        query = query.eq("house", house);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         throw error;
