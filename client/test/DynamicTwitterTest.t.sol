@@ -52,7 +52,8 @@ contract DynamicTwitterTest is Test {
             DynamicTwitterProver.ActionType.QUOTE_TWEET,
             "https://api.x.com/1.1/statuses/show.json?id={post_id}",
             "quoted_status_id",
-            "12345"
+            "12345",
+            false
         );
 
         assertEq(newActionId, initialCount);
@@ -74,6 +75,7 @@ contract DynamicTwitterTest is Test {
             "https://new-api.x.com/test",
             "new_path",
             "new_value",
+            false,
             false
         );
 
@@ -206,7 +208,7 @@ contract DynamicTwitterTest is Test {
         prover.getActionConfig(999);
 
         vm.expectRevert("Invalid action ID");
-        prover.updateActionConfig(999, "", "", "", true);
+        prover.updateActionConfig(999, "", "", "", false, true);
 
         vm.expectRevert("Invalid action ID");
         prover.toggleActionConfig(999);
@@ -235,7 +237,8 @@ contract DynamicTwitterTest is Test {
             DynamicTwitterProver.ActionType.LIKE_POST,
             "https://test.com",
             "test_path",
-            "test_value"
+            "test_value",
+            false
         );
         uint256 gasUsed = gasBefore - gasleft();
 

@@ -25,6 +25,7 @@ contract DynamicTwitterProver is Prover {
         string baseUrl;
         string jsonPath;
         string expectedValue;
+        bool expectedValueIsBool;
         bool isActive;
     }
 
@@ -44,6 +45,7 @@ contract DynamicTwitterProver is Prover {
             baseUrl: "https://api.x.com/1.1/account/settings.json",
             jsonPath: "screen_name",
             expectedValue: "",
+            expectedValueIsBool: false,
             isActive: true
         });
 
@@ -53,6 +55,7 @@ contract DynamicTwitterProver is Prover {
             baseUrl: "https://x.com/i/api/graphql/xWw45l6nX7DP2FKRyePXSw/UserByScreenName",
             jsonPath: "data.user.result.relationship_perspectives.following",
             expectedValue: "true",
+            expectedValueIsBool: true,
             isActive: true
         });
 
@@ -62,6 +65,7 @@ contract DynamicTwitterProver is Prover {
             baseUrl: "https://x.com/i/api/graphql/u5Tij6ERlSH2LZvCUqallw/TweetDetail",
             jsonPath: "data.threaded_conversation_with_injections_v2.instructions[0].entries[0].content.itemContent.tweet_results.result.legacy.favorited",
             expectedValue: "true",
+            expectedValueIsBool: true,
             isActive: true
         });
 
@@ -71,6 +75,7 @@ contract DynamicTwitterProver is Prover {
             baseUrl: "https://x.com/i/api/graphql/u5Tij6ERlSH2LZvCUqallw/TweetDetail",
             jsonPath: "data.threaded_conversation_with_injections_v2.instructions[0].entries[0].content.itemContent.tweet_results.result.legacy.retweeted",
             expectedValue: "true",
+            expectedValueIsBool: true,
             isActive: true
         });
 
@@ -102,7 +107,7 @@ contract DynamicTwitterProver is Prover {
 
         ActionConfig memory config = actionConfigs[actionId];
 
-        Web memory web = webProof.verify(config.baseUrl);
+        Web memory web = webProof.verifyWithUrlPrefix(config.baseUrl);
 
         bool actionVerified = false;
         string memory actualValue = "";
@@ -113,10 +118,19 @@ contract DynamicTwitterProver is Prover {
                 keccak256(abi.encodePacked(actualValue)) ==
                 keccak256(abi.encodePacked(username));
         } else {
-            actualValue = web.jsonGetString(config.jsonPath);
-            actionVerified =
-                keccak256(abi.encodePacked(actualValue)) ==
-                keccak256(abi.encodePacked(config.expectedValue));
+            if (config.expectedValueIsBool) {
+                bool actualBoolValue = web.jsonGetBool(config.jsonPath);
+                actualValue = actualBoolValue ? "true" : "false";
+                actionVerified =
+                    actualBoolValue ==
+                    (keccak256(abi.encodePacked(config.expectedValue)) ==
+                        keccak256(abi.encodePacked("true")));
+            } else {
+                actualValue = web.jsonGetString(config.jsonPath);
+                actionVerified =
+                    keccak256(abi.encodePacked(actualValue)) ==
+                    keccak256(abi.encodePacked(config.expectedValue));
+            }
         }
 
         return (
@@ -171,7 +185,7 @@ contract DynamicTwitterProver is Prover {
 
             ActionConfig memory config = actionConfigs[actionIds[i]];
 
-            Web memory web = webProofs[i].verify(config.baseUrl);
+            Web memory web = webProofs[i].verifyWithUrlPrefix(config.baseUrl);
 
             if (config.actionType == ActionType.PROFILE_VERIFICATION) {
                 actualValues[i] = web.jsonGetString(config.jsonPath);
@@ -179,10 +193,19 @@ contract DynamicTwitterProver is Prover {
                     keccak256(abi.encodePacked(actualValues[i])) ==
                     keccak256(abi.encodePacked(username));
             } else {
-                actualValues[i] = web.jsonGetString(config.jsonPath);
-                results[i] =
-                    keccak256(abi.encodePacked(actualValues[i])) ==
-                    keccak256(abi.encodePacked(config.expectedValue));
+                if (config.expectedValueIsBool) {
+                    bool actualBoolValue = web.jsonGetBool(config.jsonPath);
+                    actualValues[i] = actualBoolValue ? "true" : "false";
+                    results[i] =
+                        actualBoolValue ==
+                        (keccak256(abi.encodePacked(config.expectedValue)) ==
+                            keccak256(abi.encodePacked("true")));
+                } else {
+                    actualValues[i] = web.jsonGetString(config.jsonPath);
+                    results[i] =
+                        keccak256(abi.encodePacked(actualValues[i])) ==
+                        keccak256(abi.encodePacked(config.expectedValue));
+                }
             }
         }
 
@@ -432,7 +455,8 @@ contract DynamicTwitterProver is Prover {
         ActionType actionType,
         string memory baseUrl,
         string memory jsonPath,
-        string memory expectedValue
+        string memory expectedValue,
+        bool expectedValueIsBool
     ) external returns (uint256) {
         uint256 newActionId = actionConfigCount;
         actionConfigs[newActionId] = ActionConfig({
@@ -440,6 +464,7 @@ contract DynamicTwitterProver is Prover {
             baseUrl: baseUrl,
             jsonPath: jsonPath,
             expectedValue: expectedValue,
+            expectedValueIsBool: expectedValueIsBool,
             isActive: true
         });
         actionConfigCount++;
@@ -451,6 +476,7 @@ contract DynamicTwitterProver is Prover {
         string memory baseUrl,
         string memory jsonPath,
         string memory expectedValue,
+        bool expectedValueIsBool,
         bool isActive
     ) external {
         require(actionId < actionConfigCount, "Invalid action ID");
@@ -458,6 +484,7 @@ contract DynamicTwitterProver is Prover {
         config.baseUrl = baseUrl;
         config.jsonPath = jsonPath;
         config.expectedValue = expectedValue;
+        config.expectedValueIsBool = expectedValueIsBool;
         config.isActive = isActive;
     }
 
