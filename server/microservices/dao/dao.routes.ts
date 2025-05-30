@@ -5,7 +5,7 @@ import {
     type CreateDaoBody,
     type GetTokenDetailsBody,
 } from "./dao.schema";
-import { createDao, getTokenDetails } from "./dao.service";
+import { createDao, getAllDaos, getTokenDetails } from "./dao.service";
 import {
     Router,
     type NextFunction,
@@ -63,6 +63,24 @@ const handleGetTokenDetails = async (
         next(error);
     }
 };
+
+const handleGetAllDaos = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const data = await getAllDaos();
+
+        res.json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 daoRouter.post(
     "/create",
     // validateJwt(),
@@ -75,3 +93,5 @@ daoRouter.post(
     validateQuery("body", getTokenDetailsBodySchema),
     handleGetTokenDetails
 );
+
+daoRouter.get("/", handleGetAllDaos);

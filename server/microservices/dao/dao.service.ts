@@ -58,6 +58,18 @@ export const getDao = async (dao_id: string) => {
     return data;
 };
 
+export const getAllDaos = async () => {
+    const { data, error } = await SupabaseService.getSupabase("admin")
+        .from("daos")
+        .select();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+};
+
 export const getTokenDetails = async ({
     token_address,
     chain_id,
