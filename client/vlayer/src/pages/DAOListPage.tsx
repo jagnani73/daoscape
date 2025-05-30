@@ -169,7 +169,7 @@ export const DAOListPage: React.FC<DAOListPageProps> = ({ onDAOSelect }) => {
                   <div>
                     <p className="text-muted-foreground">Members</p>
                     <p className="font-medium">
-                      {dao.total_members.toLocaleString()}
+                      {dao.total_members?.toLocaleString()}
                     </p>
                   </div>
                   <div>

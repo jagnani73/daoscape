@@ -7,6 +7,7 @@ import { ProofVerificationTab } from "../features/proof/ProofVerificationTab";
 import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { DAOTab } from "../features/dao/DAOTab";
 import { ProfilePage } from "../../pages/ProfilePage";
+import { AutoCreateMember } from "../AutoCreateMember";
 import { STEP_KIND } from "../../utils/steps";
 import { useAppContext } from "../../contexts/AppContext";
 
@@ -27,6 +28,8 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AutoCreateMember />
+
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

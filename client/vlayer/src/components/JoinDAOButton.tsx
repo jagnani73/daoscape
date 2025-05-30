@@ -26,14 +26,28 @@ export const JoinDAOButton: React.FC<JoinDAOButtonProps> = ({
     setIsJoining(true);
 
     try {
-      const result = await daoService.joinDAO(daoId, walletAddress);
+      // First, ensure the member exists in the system
+      console.log("Ensuring member exists for wallet:", walletAddress);
+      const memberResult = await daoService.createMember(walletAddress);
 
-      if (result.success) {
+      if (
+        !memberResult.success &&
+        !memberResult.message?.toLowerCase().includes("already exists") &&
+        !memberResult.message?.toLowerCase().includes("duplicate")
+      ) {
+        console.warn("Failed to create/verify member:", memberResult.message);
+        // Continue anyway, as the member might already exist
+      }
+
+      // Then join the DAO
+      console.log("Joining DAO:", daoId);
+      const joinResult = await daoService.joinDAO(daoId, walletAddress);
+
+      if (joinResult.success) {
         onJoinSuccess?.();
-        // You might want to show a success message here
-        console.log("Successfully joined DAO:", result.message);
+        console.log("Successfully joined DAO:", joinResult.message);
       } else {
-        onJoinError?.(result.message || "Failed to join DAO");
+        onJoinError?.(joinResult.message || "Failed to join DAO");
       }
     } catch (error) {
       const errorMessage =

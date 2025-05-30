@@ -8,9 +8,25 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { DAODetailsTab } from "../components/DAODetailsTab";
+import { DAOMembersTab } from "../components/DAOMembersTab";
+import { DAOProposalsTab } from "../components/DAOProposalsTab";
+import { ProposalPage } from "./ProposalPage";
 import { DAO, MembershipStatus } from "../types/dao";
 import { daoService } from "../services/daoService";
 import { useAccount } from "wagmi";
+import {
+  formatDate,
+  getMembershipStatusBadgeProps,
+  isDAOOwner,
+  isDAOMember,
+} from "../utils/daoHelpers";
 
 interface DAODetailPageProps {
   daoId: string;
@@ -25,20 +41,34 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
   const [membershipStatus, setMembershipStatus] =
     useState<MembershipStatus>("not_member");
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("details");
+  const [viewMode, setViewMode] = useState<"member" | "owner">("member");
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
+    null
+  );
   const { address, isConnected } = useAccount();
+
+  const isOwner =
+    dao && address ? isDAOOwner(address, dao.owner_address) : false;
+  const isMember = isDAOMember(membershipStatus);
 
   useEffect(() => {
     const loadDAODetails = async () => {
       try {
         setLoading(true);
-        const daoData = await daoService.getDAOById(daoId);
+        const daoData = await daoService.getDAOByIdDetailed(daoId);
         setDAO(daoData);
 
         if (daoData && address) {
-          const status = await daoService.getMembershipStatus(daoId, address);
-          setMembershipStatus(status);
+          setMembershipStatus(
+            daoData.members?.some((member) => member.member_id === address)
+              ? "member"
+              : "not_member"
+          );
+
+          const userIsOwner = isDAOOwner(address, daoData.owner_address);
+          setViewMode(userIsOwner ? "owner" : "member");
         }
       } catch (error) {
         console.error("Error loading DAO details:", error);
@@ -50,79 +80,44 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
     loadDAODetails();
   }, [daoId, address]);
 
-  const handleJoinDAO = async () => {
-    if (!address || !dao) return;
+  const handleJoinSuccess = () => {
+    setMembershipStatus("member");
+    console.log("Successfully joined DAO!");
+  };
 
+  const handleJoinError = (error: string) => {
+    console.error("Failed to join DAO:", error);
+  };
+
+  const handleProposalCreated = async () => {
     try {
-      setJoining(true);
-      const success = await daoService.requestToJoinDAO(
-        daoId,
-        address,
-        joinMessage
-      );
-
-      if (success) {
-        setMembershipStatus("pending");
-        setTimeout(() => {
-          setMembershipStatus("member");
-        }, 3000);
-      }
+      const daoData = await daoService.getDAOByIdDetailed(daoId);
+      setDAO(daoData);
     } catch (error) {
-      console.error("Error joining DAO:", error);
-    } finally {
-      setJoining(false);
+      console.error("Error refreshing DAO details:", error);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const handleProposalClick = (proposalId: string) => {
+    setSelectedProposalId(proposalId);
   };
 
   const getMembershipStatusBadge = () => {
-    switch (membershipStatus) {
-      case "member":
-        return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
-            ✓ Member
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-            ⏳ Pending
-          </Badge>
-        );
-      case "admin":
-        return (
-          <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-            👑 Admin
-          </Badge>
-        );
-      default:
-        return null;
-    }
+    const badgeProps = getMembershipStatusBadgeProps(membershipStatus);
+    if (!badgeProps) return null;
+
+    return <Badge className={badgeProps.className}>{badgeProps.text}</Badge>;
   };
 
-  const getJoinButtonText = () => {
-    switch (membershipStatus) {
-      case "member":
-        return "Already a Member";
-      case "pending":
-        return "Request Pending";
-      case "admin":
-        return "Admin";
-      default:
-        return joining ? "Joining..." : "Join DAO";
-    }
-  };
-
-  const canJoin = () => {
-    return isConnected && membershipStatus === "not_member" && !joining;
-  };
+  // If a proposal is selected, show the proposal page
+  if (selectedProposalId) {
+    return (
+      <ProposalPage
+        proposalId={selectedProposalId}
+        onBack={() => setSelectedProposalId(null)}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -154,7 +149,7 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
         ← Back to DAOs
       </Button>
 
-      {/* DAO Header */}
+      {/* DAO Header - Always visible */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -164,9 +159,16 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
                 <div className="flex items-center gap-3 mb-2">
                   <CardTitle className="text-2xl">{dao.name}</CardTitle>
                   {getMembershipStatusBadge()}
+                  {isOwner && (
+                    <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                      👑 Owner
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex gap-2 mb-3">
-                  <Badge variant="secondary">{dao.tags[0]}</Badge>
+                  {dao.tags && dao.tags.length > 0 && (
+                    <Badge variant="secondary">{dao.tags[0]}</Badge>
+                  )}
                   <Badge variant="default">Active</Badge>
                 </div>
                 <CardDescription className="text-base">
@@ -174,16 +176,35 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
                 </CardDescription>
               </div>
             </div>
+            {/* Owner/Member View Toggle */}
+            {isOwner && (
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "member" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("member")}
+                >
+                  Member View
+                </Button>
+                <Button
+                  variant={viewMode === "owner" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("owner")}
+                >
+                  Owner View
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
       </Card>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Always visible */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary">
-              {dao.total_members.toLocaleString()}
+              {dao.members?.length || dao.total_members || 0}
             </div>
             <div className="text-sm text-muted-foreground">Members</div>
           </CardContent>
@@ -192,150 +213,82 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary">
-              {dao.total_proposals}
+              {dao.proposals?.length || dao.total_proposals || 0}
             </div>
             <div className="text-sm text-muted-foreground">Proposals</div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-6 text-center">
             <div className="text-2xl font-bold text-primary">
-              {formatDate(dao.created_at).split(",")[1]}
+              {formatDate(dao.created_at).split(",")[1]?.trim() ||
+                new Date(dao.created_at).getFullYear()}
             </div>
             <div className="text-sm text-muted-foreground">Founded</div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Join DAO Section */}
-      {isConnected ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Join This DAO</CardTitle>
-            <CardDescription>
-              {membershipStatus === "not_member"
-                ? "Become a member to participate in governance and access exclusive benefits."
-                : membershipStatus === "pending"
-                ? "Your membership request is being processed. You'll be notified once approved."
-                : "You are already a member of this DAO!"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {membershipStatus === "not_member" && (
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Message (Optional)
-                </label>
-                <textarea
-                  value={joinMessage}
-                  onChange={(e) => setJoinMessage(e.target.value)}
-                  placeholder="Tell the DAO why you want to join..."
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
-                  rows={3}
-                />
-              </div>
-            )}
-            <Button
-              onClick={handleJoinDAO}
-              disabled={!canJoin()}
-              className="w-full"
-              size="lg"
-            >
-              {getJoinButtonText()}
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
         <Card>
           <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to connect your wallet to join this DAO.
-            </p>
-            <w3m-button />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Links and Social */}
-      {(dao.socials[3] || dao.socials[2] || dao.socials[0]) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Links & Social</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 flex-wrap">
-              {dao.socials[3] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[3]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    🌐 Website
-                  </a>
-                </Button>
-              )}
-              {dao.socials[2] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[2]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    🐦 Twitter
-                  </a>
-                </Button>
-              )}
-              {dao.socials[0] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[0]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    💬 Discord
-                  </a>
-                </Button>
-              )}
-              {dao.socials[1] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[1]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    💬 Telegram
-                  </a>
-                </Button>
-              )}
+            <div className="text-2xl font-bold text-primary">
+              {dao.tokens?.length || 0}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Token Requirements
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      {/* Additional Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>About This DAO</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h4 className="font-semibold mb-2">Mission</h4>
-            <p className="text-muted-foreground">{dao.description}</p>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-2">Founded</h4>
-            <p className="text-muted-foreground">
-              {formatDate(dao.created_at)}
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-2">Category</h4>
-            <Badge variant="secondary">{dao.tags[0]}</Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="details">DAO Details</TabsTrigger>
+          <TabsTrigger value="members">
+            Members ({dao.members?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="proposals">
+            Proposals ({dao.proposals?.length || 0})
+            {isOwner && viewMode === "owner" && (
+              <Badge className="ml-2 bg-purple-100 text-purple-800 border-purple-200 text-xs">
+                Owner
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* DAO Details Tab */}
+        <TabsContent value="details" className="space-y-6">
+          <DAODetailsTab
+            dao={dao}
+            membershipStatus={membershipStatus}
+            isConnected={isConnected}
+            address={address}
+            joinMessage={joinMessage}
+            setJoinMessage={setJoinMessage}
+            handleJoinSuccess={handleJoinSuccess}
+            handleJoinError={handleJoinError}
+          />
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members" className="space-y-6">
+          <DAOMembersTab members={dao.members} daoName={dao.name} />
+        </TabsContent>
+
+        {/* Proposals Tab */}
+        <TabsContent value="proposals" className="space-y-6">
+          <DAOProposalsTab
+            proposals={dao.proposals}
+            daoId={dao.dao_id}
+            daoName={dao.name}
+            isOwner={isOwner && viewMode === "owner"}
+            onProposalCreated={handleProposalCreated}
+            onProposalClick={handleProposalClick}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

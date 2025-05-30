@@ -1,10 +1,18 @@
 import {
   DAO,
   DAOResponse,
+  DAODetailResponse,
   JoinDAOResponse,
+  CreateMemberResponse,
+  CreateProposalRequest,
+  CreateProposalResponse,
+  TokenDetailsResponse,
   DAOMember,
   MembershipRequest,
   MembershipStatus,
+  ProposalDetailResponse,
+  VoteRequest,
+  VoteResponse,
 } from "../types/dao";
 
 const API_BASE_URL = import.meta.env.VITE_BE_API_URL;
@@ -74,6 +82,27 @@ export const daoService = {
     }
   },
 
+  getDAOByIdDetailed: async (id: string): Promise<DAO | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/dao/${id}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: DAODetailResponse = await response.json();
+
+      if (!data.success) {
+        throw new Error("API returned unsuccessful response");
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error("Error fetching detailed DAO by ID:", error);
+      return null;
+    }
+  },
+
   getDAOsByCategory: async (category: string): Promise<DAO[]> => {
     try {
       const daos = await daoService.getAllDAOs();
@@ -95,6 +124,76 @@ export const daoService = {
     } catch (error) {
       console.error("Error fetching DAOs by tag:", error);
       return [];
+    }
+  },
+
+  getTokenDetails: async (
+    tokenAddress: string,
+    chainId: number
+  ): Promise<TokenDetailsResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/dao/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token_address: tokenAddress,
+          chain_id: chainId,
+        }),
+      });
+
+      const data: TokenDetailsResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching token details:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch token details",
+      };
+    }
+  },
+
+  createMember: async (
+    walletAddress: string
+  ): Promise<CreateMemberResponse> => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/member/${walletAddress}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data: CreateMemberResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error creating member:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to create member",
+      };
     }
   },
 
@@ -130,15 +229,6 @@ export const daoService = {
         message: error instanceof Error ? error.message : "Failed to join DAO",
       };
     }
-  },
-
-  getMembershipStatus: async (
-    daoId: string,
-    userAddress: string
-  ): Promise<MembershipStatus> => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const key = `${daoId}-${userAddress}`;
-    return membershipStatus[key] || "not_member";
   },
 
   requestToJoinDAO: async (
@@ -177,5 +267,98 @@ export const daoService = {
 
   getTags: async (): Promise<string[]> => {
     return daoService.getCategories();
+  },
+
+  createProposal: async (
+    proposalData: CreateProposalRequest
+  ): Promise<CreateProposalResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/proposal/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(proposalData),
+      });
+
+      const data: CreateProposalResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error creating proposal:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to create proposal",
+      };
+    }
+  },
+
+  getProposalById: async (
+    proposalId: string
+  ): Promise<ProposalDetailResponse> => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/proposal/${proposalId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data: ProposalDetailResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching proposal:", error);
+      return {
+        success: false,
+        data: null as any,
+        message:
+          error instanceof Error ? error.message : "Failed to fetch proposal",
+      };
+    }
+  },
+
+  castVote: async (voteData: VoteRequest): Promise<VoteResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(voteData),
+      });
+
+      const data: VoteResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error casting vote:", error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to cast vote",
+      };
+    }
   },
 };
