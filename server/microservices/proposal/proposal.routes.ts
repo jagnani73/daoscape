@@ -2,10 +2,16 @@ import { validateQuery } from "../../middlewares";
 import {
     concludeProposalBodySchema,
     createProposalBodySchema,
+    getProposalParamsSchema,
     type ConcludeProposalBody,
     type CreateProposalBody,
+    type GetProposalParams,
 } from "./proposal.schema";
-import { concludeProposal, createProposal } from "./proposal.service";
+import {
+    concludeProposal,
+    createProposal,
+    getProposalWithVotes,
+} from "./proposal.service";
 import {
     Router,
     type NextFunction,
@@ -67,6 +73,25 @@ const handleConcludeProposal = async (
     }
 };
 
+const handleGetProposalWithVotes = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { proposal_id } = req.params as GetProposalParams;
+
+        const data = await getProposalWithVotes(proposal_id);
+
+        res.json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 proposalRouter.post(
     "/create",
     // validateJwt(),
@@ -78,4 +103,10 @@ proposalRouter.post(
     "/conclude",
     validateQuery("body", concludeProposalBodySchema),
     handleConcludeProposal
+);
+
+proposalRouter.get(
+    "/:proposal_id",
+    validateQuery("params", getProposalParamsSchema),
+    handleGetProposalWithVotes
 );

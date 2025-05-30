@@ -52,6 +52,12 @@ export const concludeProposalBodySchema = z.object({
 
 export type ConcludeProposalBody = z.infer<typeof concludeProposalBodySchema>;
 
+export const getProposalParamsSchema = z.object({
+    proposal_id: z.string().uuid(),
+});
+
+export type GetProposalParams = z.infer<typeof getProposalParamsSchema>;
+
 export interface MeritDistribution {
     address: string;
     amount: string;

@@ -58,6 +58,25 @@ export const getProposal = async (proposal_id: string) => {
     return data;
 };
 
+export const getProposalWithVotes = async (proposal_id: string) => {
+    const { data, error } = await SupabaseService.getSupabase("admin")
+        .from("proposals")
+        .select(
+            `
+            *,
+            votes(*)
+        `
+        )
+        .eq("proposal_id", proposal_id)
+        .single();
+
+    if (error && error.code !== SUPABASE_0_ROWS_ERROR_CODE) {
+        throw error;
+    }
+
+    return data || [];
+};
+
 export const concludeProposal = async (
     proposal_id: string,
     is_feedback: boolean
