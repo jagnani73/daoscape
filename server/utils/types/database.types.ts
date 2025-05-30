@@ -222,7 +222,7 @@ export type Database = {
             votes: {
                 Row: {
                     created_at: string;
-                    dao_id: string;
+                    house: Database["public"]["Enums"]["HOUSES"];
                     is_feedback: boolean;
                     member_id: string;
                     proposal_id: string;
@@ -231,7 +231,7 @@ export type Database = {
                 };
                 Insert: {
                     created_at?: string;
-                    dao_id: string;
+                    house: Database["public"]["Enums"]["HOUSES"];
                     is_feedback: boolean;
                     member_id: string;
                     proposal_id?: string;
@@ -240,7 +240,7 @@ export type Database = {
                 };
                 Update: {
                     created_at?: string;
-                    dao_id?: string;
+                    house?: Database["public"]["Enums"]["HOUSES"];
                     is_feedback?: boolean;
                     member_id?: string;
                     proposal_id?: string;
@@ -248,13 +248,6 @@ export type Database = {
                     weight?: number;
                 };
                 Relationships: [
-                    {
-                        foreignKeyName: "votes_dao_id_fkey";
-                        columns: ["dao_id"];
-                        isOneToOne: false;
-                        referencedRelation: "daos";
-                        referencedColumns: ["dao_id"];
-                    },
                     {
                         foreignKeyName: "votes_member_id_fkey";
                         columns: ["member_id"];

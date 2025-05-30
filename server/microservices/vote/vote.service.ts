@@ -37,6 +37,19 @@ export const castVote = async ({
         throw createError("Proposal not found", HttpStatusCode.NOT_FOUND);
     }
 
+    const memberships = await getMemberships(wallet_address);
+    let membership =
+        memberships?.find(
+            (membership) => membership.dao_id === proposal.dao_id
+        ) ?? null;
+
+    if (!membership) {
+        throw createError(
+            "User is not a member of this DAO",
+            HttpStatusCode.BAD_REQUEST
+        );
+    }
+
     const existingVote = await getVote(
         proposal_id,
         wallet_address,
@@ -44,19 +57,6 @@ export const castVote = async ({
     );
     if (existingVote) {
         throw createError("User has already voted", HttpStatusCode.BAD_REQUEST);
-    }
-
-    const memberships = await getMemberships(wallet_address);
-
-    if (
-        !memberships?.some(
-            (membership) => membership.dao_id === proposal.dao_id
-        )
-    ) {
-        throw createError(
-            "User is not a member of this DAO",
-            HttpStatusCode.BAD_REQUEST
-        );
     }
 
     const now = new Date();
@@ -95,7 +95,7 @@ export const castVote = async ({
             proposal_id,
             member_id: member.member_id,
             vote,
-            dao_id: proposal.dao_id,
+            house: membership.house,
             weight: is_feedback ? 1 : 100,
         })
         .select()
