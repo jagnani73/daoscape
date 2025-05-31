@@ -29,6 +29,7 @@ const handleCreateDao = async (
             socials,
             tokens,
             tags,
+            email_subfix,
         } = req.body as CreateDaoBody;
 
         const data = await createDao({
@@ -39,6 +40,7 @@ const handleCreateDao = async (
             socials,
             tokens,
             tags,
+            email_subfix,
         });
 
         res.json({

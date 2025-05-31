@@ -14,6 +14,7 @@ export type Database = {
                     created_at: string;
                     dao_id: string;
                     description: string;
+                    email_subfix: string;
                     logo: string;
                     name: string;
                     owner_address: string;
@@ -25,6 +26,7 @@ export type Database = {
                     created_at?: string;
                     dao_id?: string;
                     description: string;
+                    email_subfix: string;
                     logo: string;
                     name: string;
                     owner_address: string;
@@ -36,6 +38,7 @@ export type Database = {
                     created_at?: string;
                     dao_id?: string;
                     description?: string;
+                    email_subfix?: string;
                     logo?: string;
                     name?: string;
                     owner_address?: string;

@@ -1,8 +1,16 @@
 import { SupabaseService } from "../../services";
-import { SUPABASE_0_ROWS_ERROR_CODE, type HOUSES } from "../../utils/constants";
+import {
+    FEEDBACK_PROPOSAL_WEIGHT,
+    SUPABASE_0_ROWS_ERROR_CODE,
+    type HOUSES,
+} from "../../utils/constants";
 import { createError, HttpStatusCode } from "../../utils/functions";
+import { getDao } from "../dao/dao.service";
 import { getMember } from "../member/member.service";
-import { getMemberships } from "../membership/membership.service";
+import {
+    getMemberships,
+    getTokensBalances,
+} from "../membership/membership.service";
 import { getProposal } from "../proposal/proposal.service";
 import type { CastVoteBody } from "./vote.schema";
 
@@ -32,6 +40,11 @@ export const castVote = async ({
     vote,
     is_feedback,
 }: CastVoteBody) => {
+    const dao = await getDao(proposal_id);
+    if (!dao) {
+        throw createError("DAO not found", HttpStatusCode.NOT_FOUND);
+    }
+
     const proposal = await getProposal(proposal_id);
     if (!proposal) {
         throw createError("Proposal not found", HttpStatusCode.NOT_FOUND);
@@ -88,6 +101,25 @@ export const castVote = async ({
         throw createError("Member not found", HttpStatusCode.NOT_FOUND);
     }
 
+    const tokenBalances = await getTokensBalances(
+        wallet_address,
+        dao.tokens as {
+            token_address: string;
+            chain_id: number;
+        }[]
+    );
+
+    const totalBalance = tokenBalances.reduce(
+        (acc, tokenBalance) => acc + tokenBalance.balance,
+        0
+    );
+
+    const TOKEN_SUPPLY_PER_TOKEN = 1_000_000_000;
+    const totalSupply =
+        (dao.tokens as { token_address: string; chain_id: number }[]).length *
+        TOKEN_SUPPLY_PER_TOKEN;
+    const percentageHolding = (totalBalance / totalSupply) * 100;
+
     const { data, error } = await SupabaseService.getSupabase("admin")
         .from("votes")
         .insert({
@@ -96,7 +128,11 @@ export const castVote = async ({
             member_id: member.member_id,
             vote,
             house: membership.house,
-            weight: is_feedback ? 1 : 100,
+            weight: is_feedback
+                ? FEEDBACK_PROPOSAL_WEIGHT
+                : Math.floor(
+                      percentageHolding * 0.5 + membership.reputation * 0.5
+                  ),
         })
         .select()
         .single();

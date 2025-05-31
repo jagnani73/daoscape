@@ -1,5 +1,7 @@
 import { OneinchService, SupabaseService } from "../../services";
 import {
+    EMAIL_VERIFIED_MERITS,
+    EMAIL_VERIFIED_REPUTATION_CHANGE,
     STARTER_REPUTATION,
     SUPABASE_0_ROWS_ERROR_CODE,
 } from "../../utils/constants";
@@ -10,7 +12,8 @@ import {
 } from "../../utils/functions";
 import { getDao } from "../dao/dao.service";
 import { getMember } from "../member/member.service";
-import type { JoinDaoBody } from "./membership.schema";
+import { distributeMerits } from "../proposal/proposal.service";
+import type { EmailVerifiedBody, JoinDaoBody } from "./membership.schema";
 
 const getMembership = async (member_id: string, dao_id: string) => {
     const { data, error } = await SupabaseService.getSupabase("admin")
@@ -40,33 +43,47 @@ export const getMemberships = async (member_id: string) => {
     return data;
 };
 
-export const checkTokenBalances = async (
+export const getTokensBalances = async (
     wallet_address: string,
     dao_tokens: {
         token_address: string;
         chain_id: number;
     }[]
 ) => {
-    const balanceChecks = await Promise.all(
-        dao_tokens.map(async (token) => {
-            try {
-                const { data } = await OneinchService.getInstance().get(
-                    `/balance/v1.2/${token.chain_id}/balances/${wallet_address}`
-                );
+    const balanceChecks = (
+        await Promise.all<{
+            token_address: string;
+            chain_id: number;
+            balance: number;
+        } | null>(
+            dao_tokens.map(async ({ chain_id, token_address }) => {
+                try {
+                    const { data } = await OneinchService.getInstance().get(
+                        `/balance/v1.2/${chain_id}/balances/${wallet_address}`
+                    );
 
-                const tokenBalance = data[token.token_address.toLowerCase()];
-                return tokenBalance && parseFloat(tokenBalance) > 0;
-            } catch (error) {
-                console.error(
-                    `Failed to check balance for token ${token.token_address} on chain ${token.chain_id}:`,
-                    error
-                );
-                return false;
-            }
-        })
-    );
+                    const tokenBalance = data[token_address.toLowerCase()];
+                    return {
+                        token_address,
+                        chain_id,
+                        balance: parseFloat(tokenBalance),
+                    };
+                } catch (error) {
+                    console.error(
+                        `Failed to check balance for token ${token_address} on chain ${chain_id}:`,
+                        error
+                    );
+                    return null;
+                }
+            })
+        )
+    ).filter(Boolean);
 
-    return balanceChecks.some((hasBalance) => hasBalance);
+    return balanceChecks as {
+        token_address: string;
+        chain_id: number;
+        balance: number;
+    }[];
 };
 
 export const joinDao = async ({ dao_id, wallet_address }: JoinDaoBody) => {
@@ -91,7 +108,7 @@ export const joinDao = async ({ dao_id, wallet_address }: JoinDaoBody) => {
         );
     }
 
-    const hasRequiredTokens = await checkTokenBalances(
+    const tokenBalances = await getTokensBalances(
         wallet_address,
         dao.tokens as {
             token_address: string;
@@ -99,7 +116,7 @@ export const joinDao = async ({ dao_id, wallet_address }: JoinDaoBody) => {
         }[]
     );
 
-    if (!hasRequiredTokens) {
+    if (tokenBalances.every((tokenBalance) => tokenBalance.balance === 0)) {
         throw createError(
             "Insufficient token balance for DAO membership",
             HttpStatusCode.BAD_REQUEST
@@ -158,4 +175,44 @@ export const changeReputation = async (
             }
         })
     );
+};
+
+export const emailVerified = async ({
+    wallet_address,
+    dao_id,
+}: EmailVerifiedBody) => {
+    const membership = await getMembership(wallet_address, dao_id);
+    if (!membership) {
+        throw createError("Membership not found", HttpStatusCode.NOT_FOUND);
+    }
+
+    const { data, error } = await SupabaseService.getSupabase("admin")
+        .from("memberships")
+        .update({
+            reputation:
+                membership.reputation + EMAIL_VERIFIED_REPUTATION_CHANGE,
+        })
+        .eq("member_id", wallet_address)
+        .select()
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    const merits = await distributeMerits(
+        `${dao_id}::${wallet_address}::${Date.now()}`,
+        "Email verified",
+        [
+            {
+                address: wallet_address,
+                amount: EMAIL_VERIFIED_MERITS.toString(),
+            },
+        ]
+    );
+
+    return {
+        merits,
+        membership: data,
+    };
 };

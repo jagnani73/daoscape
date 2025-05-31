@@ -12,6 +12,7 @@ export const createDao = async ({
     socials,
     tokens,
     tags,
+    email_subfix,
 }: CreateDaoBody) => {
     const member = await getMember(owner_address);
     if (!member) {
@@ -33,6 +34,7 @@ export const createDao = async ({
             ],
             tokens,
             tags,
+            email_subfix,
         })
         .select()
         .single();

@@ -13,3 +13,10 @@ export const getMembershipsBodySchema = z.object({
 });
 
 export type GetMembershipsBody = z.infer<typeof getMembershipsBodySchema>;
+
+export const emailVerifiedBodySchema = z.object({
+    wallet_address: evmAddressSchema,
+    dao_id: z.string(),
+});
+
+export type EmailVerifiedBody = z.infer<typeof emailVerifiedBodySchema>;

@@ -19,6 +19,7 @@ export const createDaoBodySchema = z.object({
         website: z.string().trim().url().optional(),
     }),
     tags: z.array(z.string().trim()).optional().default([]),
+    email_subfix: z.string().trim(),
 });
 
 export type CreateDaoBody = z.infer<typeof createDaoBodySchema>;

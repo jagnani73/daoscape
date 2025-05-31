@@ -75,7 +75,7 @@ export const getProposalWithVotes = async (proposal_id: string) => {
         throw error;
     }
 
-    return data || [];
+    return data;
 };
 
 export const concludeProposal = async (
@@ -182,6 +182,7 @@ export const concludeProposal = async (
             );
             merits = await distributeMerits(
                 `${proposal.dao_id}::${proposal_id}::${Date.now()}`,
+                "Feedback distribution",
                 yesDistributions
             );
 
@@ -206,6 +207,7 @@ export const concludeProposal = async (
             );
             merits = await distributeMerits(
                 `${proposal.dao_id}::${proposal_id}::${Date.now()}`,
+                "Feedback distribution",
                 noDistributions
             );
 
@@ -231,13 +233,14 @@ export const concludeProposal = async (
 };
 
 export const distributeMerits = async (
-    distribution_id: string,
+    id: string,
+    description: string,
     distributions: MeritDistribution[]
 ) => {
     const axiosInstance = BlockscoutService.getInstance();
     const { data } = await axiosInstance.post("/partner/api/v1/distribute", {
-        id: distribution_id,
-        description: "Feedback distribution",
+        id,
+        description,
         distributions,
         create_missing_accounts: true,
         expected_total: (distributions.length * MERITS_PER_PROPOSAL).toString(),
