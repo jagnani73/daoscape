@@ -15,6 +15,8 @@ import {
 } from "../components/ui";
 import { ProposalWithVotes, VoteType, DAO, Member } from "../types/dao";
 import { daoService } from "../services/daoService";
+import { governanceService } from "../services/governanceService";
+import { useGovernanceContract } from "../hooks/useGovernanceContract";
 import {
   formatDateTime,
   getProposalStatusBadgeProps,
@@ -25,7 +27,10 @@ import {
   getProposalPhase,
   isVotingActive,
   isFeedbackActive,
+  hasUserVoted,
 } from "../utils/daoHelpers";
+import { useMemberData } from "../hooks/useMemberData";
+import { OnChainStatusBadge } from "../components/ui/OnChainStatusBadge";
 
 interface ProposalPageProps {
   proposalId: string;
@@ -43,11 +48,17 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
+  const governanceContract = useGovernanceContract();
 
   const isOwner =
     dao && address ? isDAOOwner(address, dao.owner_address) : false;
   const userHouse = userMember?.house;
   const proposalPhase = proposal ? getProposalPhase(proposal) : "ended";
+
+  const [onChainStatus, setOnChainStatus] = useState<{
+    voting?: "pending" | "success" | "failed" | "api-only";
+    message?: string;
+  }>({});
 
   useEffect(() => {
     const loadProposalDetails = async () => {
@@ -127,27 +138,58 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
     if (!proposal || !address) return;
 
     setVoting(true);
+    setOnChainStatus({ voting: "pending" });
+
     try {
-      const response = await daoService.castVote({
-        proposal_id: proposalId,
-        wallet_address: address,
-        vote,
-        is_feedback: isFeedback,
-      });
+      // Use hybrid voting that calls both API and on-chain contract
+      const response = await governanceService.castHybridVote(
+        {
+          proposal_id: proposalId,
+          wallet_address: address,
+          vote,
+          is_feedback: isFeedback,
+        },
+        {
+          voteYes: governanceContract.voteYes,
+          voteNo: governanceContract.voteNo,
+          voteAbstain: governanceContract.voteAbstain,
+        }
+      );
 
       if (response.success) {
+        // Update on-chain status based on response
+        if (response.onChainVoted) {
+          setOnChainStatus({ voting: "success" });
+          console.log("✅ Vote recorded both in API and on-chain");
+        } else if (response.onChainError) {
+          setOnChainStatus({
+            voting: "failed",
+            message: response.onChainError,
+          });
+          console.warn(
+            "⚠️ Vote recorded in API, but on-chain failed:",
+            response.onChainError
+          );
+        } else {
+          setOnChainStatus({ voting: "api-only" });
+        }
+
         const updatedProposal = await daoService.getProposalById(proposalId);
         if (updatedProposal.success && updatedProposal.data) {
           setProposal(updatedProposal.data);
         }
       } else {
+        setOnChainStatus({ voting: "failed", message: response.message });
         setError(response.message || "Failed to cast vote");
       }
     } catch (error) {
       console.error("Error casting vote:", error);
+      setOnChainStatus({ voting: "failed", message: "Transaction failed" });
       setError("Failed to cast vote");
     } finally {
       setVoting(false);
+      // Clear on-chain status after 5 seconds
+      setTimeout(() => setOnChainStatus({}), 5000);
     }
   };
 
@@ -223,30 +265,42 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
 
           {/* Voting Buttons */}
           {votePermission.canVote ? (
-            <div className="flex gap-2 pt-4">
-              <Button
-                onClick={() => handleVote(VoteType.YES, isFeedback)}
-                disabled={voting}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                Vote Yes
-              </Button>
-              <Button
-                onClick={() => handleVote(VoteType.NO, isFeedback)}
-                disabled={voting}
-                variant="destructive"
-                className="flex-1"
-              >
-                Vote No
-              </Button>
-              <Button
-                onClick={() => handleVote(VoteType.ABSTAIN, isFeedback)}
-                disabled={voting}
-                variant="outline"
-                className="flex-1"
-              >
-                Abstain
-              </Button>
+            <div className="space-y-3">
+              {/* On-chain status indicator */}
+              {onChainStatus.voting && (
+                <div className="flex justify-center">
+                  <OnChainStatusBadge
+                    status={onChainStatus.voting}
+                    message={onChainStatus.message}
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={() => handleVote(VoteType.YES, isFeedback)}
+                  disabled={voting}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {voting ? "Processing..." : "Vote Yes"}
+                </Button>
+                <Button
+                  onClick={() => handleVote(VoteType.NO, isFeedback)}
+                  disabled={voting}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  {voting ? "Processing..." : "Vote No"}
+                </Button>
+                <Button
+                  onClick={() => handleVote(VoteType.ABSTAIN, isFeedback)}
+                  disabled={voting}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {voting ? "Processing..." : "Abstain"}
+                </Button>
+              </div>
             </div>
           ) : (
             <Alert>

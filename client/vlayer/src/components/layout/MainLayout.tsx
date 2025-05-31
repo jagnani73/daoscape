@@ -4,6 +4,7 @@ import { Sidebar } from "../shared/navigation/Sidebar";
 import { ProofVerificationTab } from "../features/proof/ProofVerificationTab";
 import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { DAOTab } from "../features/dao/DAOTab";
+import { QuestTab } from "../features/quest/QuestTab";
 import { ProfilePage } from "../../pages/ProfilePage";
 import { AutoCreateMember } from "../AutoCreateMember";
 import { STEP_KIND } from "../../utils/steps";
@@ -31,7 +32,7 @@ export const MainLayout: React.FC = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (tab !== "daos") {
+    if (tab !== "daos" && tab !== "quests") {
       setSelectedDAOId(null);
     }
   };
@@ -41,6 +42,13 @@ export const MainLayout: React.FC = () => {
       case "daos":
         return (
           <DAOTab selectedDAOId={selectedDAOId} onDAOSelect={handleDAOSelect} />
+        );
+      case "quests":
+        return (
+          <QuestTab
+            selectedDAOId={selectedDAOId}
+            onDAOSelect={handleDAOSelect}
+          />
         );
       case "proof-verification":
         return (

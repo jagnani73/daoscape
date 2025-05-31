@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAccount } from "wagmi";
 import {
   Card,
   CardContent,
@@ -8,7 +9,10 @@ import {
 } from "../../../ui/card";
 import { Button } from "../../../ui/button";
 import { Badge } from "../../../ui/badge";
+import { OnChainStatusBadge } from "../../../ui/OnChainStatusBadge";
 import { daoService } from "../../../../services/daoService";
+import { governanceService } from "../../../../services/governanceService";
+import { useGovernanceContract } from "../../../../hooks/useGovernanceContract";
 import { CreateProposalRequest } from "../../../../types/dao";
 
 interface CreateProposalProps {
@@ -32,6 +36,12 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { address } = useAccount();
+  const governanceContract = useGovernanceContract();
+  const [onChainStatus, setOnChainStatus] = useState<{
+    creation?: "pending" | "success" | "failed" | "api-only";
+    message?: string;
+  }>({});
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -76,8 +86,14 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
       return;
     }
 
+    if (!address) {
+      setError("Please connect your wallet to create proposals");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+    setOnChainStatus({ creation: "pending" });
 
     try {
       const proposalData: CreateProposalRequest = {
@@ -89,10 +105,41 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
         feedback_end: new Date(formData.feedback_end).toISOString(),
       };
 
-      const result = await daoService.createProposal(proposalData);
+      // Generate a unique proposal ID for on-chain use
+      const proposalId = governanceService.generateProposalId();
+
+      // Use hybrid proposal creation that calls both API and on-chain contract
+      const result = await governanceService.createHybridProposal(
+        proposalData,
+        {
+          daoId: daoId,
+          proposalId: proposalId,
+          title: formData.title.trim(),
+          creator: address,
+          startTime: new Date(formData.voting_start),
+          endTime: new Date(formData.voting_end),
+        },
+        {
+          createProposal: governanceContract.createProposal,
+        }
+      );
 
       if (result.success) {
-        setSuccess("Proposal created successfully!");
+        // Update on-chain status based on response
+        if (result.onChainCreated) {
+          setOnChainStatus({ creation: "success" });
+          setSuccess("✅ Proposal created successfully!");
+        } else if (result.onChainError) {
+          setOnChainStatus({
+            creation: "failed",
+            message: result.onChainError,
+          });
+          setSuccess(`"✅ Proposal created`);
+        } else {
+          setOnChainStatus({ creation: "api-only" });
+          setSuccess("Proposal created successfully!");
+        }
+
         setFormData({
           title: "",
           description: "",
@@ -102,14 +149,18 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
         });
         onProposalCreated();
       } else {
+        setOnChainStatus({ creation: "failed", message: result.message });
         setError(result.message || "Failed to create proposal");
       }
     } catch (error) {
+      setOnChainStatus({ creation: "failed", message: "Transaction failed" });
       setError(
         error instanceof Error ? error.message : "Failed to create proposal"
       );
     } finally {
       setIsSubmitting(false);
+      // Clear on-chain status after 10 seconds for proposals (longer than votes)
+      setTimeout(() => setOnChainStatus({}), 10000);
     }
   };
 
@@ -213,6 +264,16 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
               />
             </div>
           </div>
+
+          {/* On-chain status indicator */}
+          {onChainStatus.creation && (
+            <div className="flex justify-center">
+              <OnChainStatusBadge
+                status={onChainStatus.creation}
+                message={onChainStatus.message}
+              />
+            </div>
+          )}
 
           {/* Error/Success Messages */}
           {error && (

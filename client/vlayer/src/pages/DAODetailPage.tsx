@@ -265,11 +265,6 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
           </TabsTrigger>
           <TabsTrigger value="proposals">
             Active Proposals ({activeProposals.length})
-            {isOwner && viewMode === "owner" && (
-              <Badge className="ml-2 bg-purple-100 text-purple-800 border-purple-200 text-xs">
-                Owner
-              </Badge>
-            )}
           </TabsTrigger>
           <TabsTrigger value="ended-proposals">
             Ended Proposals ({endedProposals.length})
