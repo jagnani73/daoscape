@@ -211,6 +211,48 @@ export type Database = {
                     },
                 ];
             };
+            quest_participant: {
+                Row: {
+                    created_at: string;
+                    member_id: string;
+                    quest_id: string;
+                    twitter_follow_completed: boolean;
+                    twitter_like_completed: boolean;
+                    twitter_retweet_completed: boolean;
+                };
+                Insert: {
+                    created_at?: string;
+                    member_id: string;
+                    quest_id: string;
+                    twitter_follow_completed: boolean;
+                    twitter_like_completed: boolean;
+                    twitter_retweet_completed: boolean;
+                };
+                Update: {
+                    created_at?: string;
+                    member_id?: string;
+                    quest_id?: string;
+                    twitter_follow_completed?: boolean;
+                    twitter_like_completed?: boolean;
+                    twitter_retweet_completed?: boolean;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "quest_participant_member_id_fkey";
+                        columns: ["member_id"];
+                        isOneToOne: false;
+                        referencedRelation: "members";
+                        referencedColumns: ["member_id"];
+                    },
+                    {
+                        foreignKeyName: "quest_participant_quest_id_fkey";
+                        columns: ["quest_id"];
+                        isOneToOne: false;
+                        referencedRelation: "quests";
+                        referencedColumns: ["quest_id"];
+                    },
+                ];
+            };
             quests: {
                 Row: {
                     created_at: string;
@@ -224,6 +266,11 @@ export type Database = {
                     reward_token_chain: number | null;
                     start_time: string;
                     title: string;
+                    twitter_account_url: string;
+                    twitter_follow_enabled: boolean;
+                    twitter_like_enabled: boolean;
+                    twitter_post_url: string;
+                    twitter_retweet_enabled: boolean;
                 };
                 Insert: {
                     created_at?: string;
@@ -237,6 +284,11 @@ export type Database = {
                     reward_token_chain?: number | null;
                     start_time: string;
                     title: string;
+                    twitter_account_url: string;
+                    twitter_follow_enabled: boolean;
+                    twitter_like_enabled: boolean;
+                    twitter_post_url: string;
+                    twitter_retweet_enabled: boolean;
                 };
                 Update: {
                     created_at?: string;
@@ -250,6 +302,11 @@ export type Database = {
                     reward_token_chain?: number | null;
                     start_time?: string;
                     title?: string;
+                    twitter_account_url?: string;
+                    twitter_follow_enabled?: boolean;
+                    twitter_like_enabled?: boolean;
+                    twitter_post_url?: string;
+                    twitter_retweet_enabled?: boolean;
                 };
                 Relationships: [
                     {
