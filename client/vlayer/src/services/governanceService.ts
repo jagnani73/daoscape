@@ -125,10 +125,16 @@ export const governanceService = {
 
       // Now create the proposal on-chain using the backend proposal ID
       try {
-        console.log("🔗 Creating proposal on-chain...");
+        console.log(
+          "🔗 Creating proposal on-chain...",
+          onChainParams.daoId,
+          backendProposalId,
+          onChainParams.title,
+          onChainParams.creator
+        );
         const txHash = await contractHooks.createProposal({
           daoId: onChainParams.daoId,
-          proposalId: backendProposalId, // Use the ID from backend
+          proposalId: backendProposalId,
           title: onChainParams.title,
           creator: onChainParams.creator,
           startTime: BigInt(
@@ -184,8 +190,8 @@ export const governanceService = {
     try {
       console.log("🗳️ Starting hybrid vote casting...");
 
-      const { proposal_id, vote } = voteData;
-      const daoId = proposal_id; // Assuming proposal_id contains DAO info or you need to map it
+      const { proposal_id, vote, dao_id } = voteData;
+      const daoId = dao_id;
 
       // First cast vote on-chain and get transaction hash
       let txHash: `0x${string}`;

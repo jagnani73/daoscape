@@ -11,7 +11,6 @@ import { Button } from "../../../ui/button";
 import { Badge } from "../../../ui/badge";
 import { IPFSMetadata } from "../../../ui/IPFSMetadata";
 import { OnChainStatusBadge } from "../../../ui/OnChainStatusBadge";
-import { daoService } from "../../../../services/daoService";
 import { governanceService } from "../../../../services/governanceService";
 import { useGovernanceContract } from "../../../../hooks/useGovernanceContract";
 import { CreateProposalRequest } from "../../../../types/dao";
@@ -110,12 +109,11 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
         feedback_end: new Date(formData.feedback_end).toISOString(),
       };
 
-      // Use hybrid proposal creation that creates in API first, then on-chain with the returned ID
       const result = await governanceService.createHybridProposal(
         proposalData,
         {
           daoId: daoId,
-          proposalId: "", // This will be replaced by the backend-generated ID
+          proposalId: "",
           title: formData.title.trim(),
           creator: address,
           startTime: new Date(formData.voting_start),

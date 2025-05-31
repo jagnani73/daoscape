@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -115,10 +115,10 @@ export const useGovernanceContract = (): GovernanceContractResult => {
     }
   }, [contractError, pendingResolvers]);
 
-  // Effect to open transaction toast
   useEffect(() => {
     if (txHash) {
-      openTxToast("84532", txHash); // Base Sepolia chain ID
+      console.log("🔗 Transaction hash:", txHash);
+      openTxToast("84532", txHash);
     }
   }, [txHash, openTxToast]);
 
@@ -195,12 +195,12 @@ export const useGovernanceContract = (): GovernanceContractResult => {
           const requestId = Math.random().toString(36);
           setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
 
-          writeContract({
-            address: governanceAddress,
-            abi: governanceAbi.abi,
-            functionName: "voteYes",
-            args: [daoId, proposalId],
-          });
+          // writeContract({
+          //   address: governanceAddress,
+          //   abi: governanceAbi.abi,
+          //   functionName: "voteYes",
+          //   args: [daoId, proposalId],
+          // });
 
           setTimeout(() => {
             setPendingResolvers((prev) => {
@@ -209,7 +209,7 @@ export const useGovernanceContract = (): GovernanceContractResult => {
               return newMap;
             });
             reject(new Error("Transaction timeout"));
-          }, 30000);
+          }, 10000);
         });
       } catch (error) {
         setIsLoading(false);
@@ -361,18 +361,33 @@ export const useGovernanceContract = (): GovernanceContractResult => {
     resetWriteContract();
   }, [resetWriteContract]);
 
-  return {
-    createProposal,
-    voteYes,
-    voteNo,
-    voteAbstain,
-    deactivateProposal,
-    isLoading: isLoading || isWritePending,
-    error,
-    txHash,
-    txStatus,
-    reset,
-  };
+  return useMemo(
+    () => ({
+      createProposal,
+      voteYes,
+      voteNo,
+      voteAbstain,
+      deactivateProposal,
+      isLoading: isLoading || isWritePending,
+      error,
+      txHash,
+      txStatus,
+      reset,
+    }),
+    [
+      createProposal,
+      voteYes,
+      voteNo,
+      voteAbstain,
+      deactivateProposal,
+      isLoading,
+      isWritePending,
+      error,
+      txHash,
+      txStatus,
+      reset,
+    ]
+  );
 };
 
 // Hook for reading contract data

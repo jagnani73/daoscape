@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useAccount } from "wagmi";
 import {
   Card,
@@ -30,7 +30,6 @@ import {
   isFeedbackActive,
   hasUserVoted,
 } from "../utils/daoHelpers";
-import { useMemberData } from "../hooks/useMemberData";
 import { OnChainStatusBadge } from "../components/ui/OnChainStatusBadge";
 import { ProposalChat } from "../components/features/dao/chat/ProposalChat";
 import { VotesList } from "../components/features/dao/VotesList";
@@ -52,6 +51,20 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
   const governanceContract = useGovernanceContract();
+
+  // Memoize the governance contract functions to prevent re-renders
+  const memoizedGovernanceContract = useMemo(
+    () => ({
+      voteYes: governanceContract.voteYes,
+      voteNo: governanceContract.voteNo,
+      voteAbstain: governanceContract.voteAbstain,
+    }),
+    [
+      governanceContract.voteYes,
+      governanceContract.voteNo,
+      governanceContract.voteAbstain,
+    ]
+  );
 
   const isOwner =
     dao && address ? isDAOOwner(address, dao.owner_address) : false;
@@ -137,214 +150,227 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
     loadProposalDetails();
   }, [proposalId, address]);
 
-  const handleVote = async (vote: VoteType, isFeedback: boolean) => {
-    if (!proposal || !address) return;
+  const handleVote = useCallback(
+    async (vote: VoteType, isFeedback: boolean) => {
+      if (!proposal || !address) return;
 
-    setVoting(true);
-    setOnChainStatus({ voting: "pending" });
+      setVoting(true);
+      setOnChainStatus({ voting: "pending" });
 
-    try {
-      // Use hybrid voting that calls both API and on-chain contract
-      const response = await governanceService.castHybridVote(
-        {
-          proposal_id: proposalId,
-          wallet_address: address,
-          vote,
-          is_feedback: isFeedback,
-        },
-        {
-          voteYes: governanceContract.voteYes,
-          voteNo: governanceContract.voteNo,
-          voteAbstain: governanceContract.voteAbstain,
+      try {
+        // Use hybrid voting that calls both API and on-chain contract
+        console.log("🗳️ Casting hybrid vote...", proposal.dao_id);
+        const response = await governanceService.castHybridVote(
+          {
+            proposal_id: proposalId,
+            dao_id: proposal.dao_id,
+            wallet_address: address,
+            vote,
+            is_feedback: isFeedback,
+          },
+          memoizedGovernanceContract
+        );
+
+        if (response.success) {
+          // Update on-chain status based on response
+          if (response.onChainVoted) {
+            setOnChainStatus({ voting: "success" });
+            console.log("✅ Vote recorded both in API and on-chain");
+          } else if (response.onChainError) {
+            setOnChainStatus({
+              voting: "failed",
+              message: response.onChainError,
+            });
+            console.warn(
+              "⚠️ Vote recorded in API, but on-chain failed:",
+              response.onChainError
+            );
+          } else {
+            setOnChainStatus({ voting: "api-only" });
+          }
+
+          const updatedProposal = await daoService.getProposalById(proposalId);
+          if (updatedProposal.success && updatedProposal.data) {
+            setProposal(updatedProposal.data);
+          }
+        } else {
+          setOnChainStatus({ voting: "failed", message: response.message });
+          setError(response.message || "Failed to cast vote");
         }
+      } catch (error) {
+        console.error("Error casting vote:", error);
+        setOnChainStatus({ voting: "failed", message: "Transaction failed" });
+        setError("Failed to cast vote");
+      } finally {
+        setVoting(false);
+        // Clear on-chain status after 5 seconds
+        setTimeout(() => setOnChainStatus({}), 5000);
+      }
+    },
+    [proposal, address, proposalId, memoizedGovernanceContract]
+  );
+
+  const renderVotingSection = useCallback(
+    (isFeedback: boolean) => {
+      if (!proposal) return null;
+
+      const sectionTitle = isFeedback ? "Feedback Voting" : "Main Voting";
+      const isActive = isFeedback
+        ? isFeedbackActive(proposal)
+        : isVotingActive(proposal);
+      const voteCounts = getVoteCounts(proposal, isFeedback);
+      const votePermission = canUserVote(
+        proposal,
+        address,
+        userHouse,
+        isOwner,
+        isFeedback
       );
 
-      if (response.success) {
-        // Update on-chain status based on response
-        if (response.onChainVoted) {
-          setOnChainStatus({ voting: "success" });
-          console.log("✅ Vote recorded both in API and on-chain");
-        } else if (response.onChainError) {
-          setOnChainStatus({
-            voting: "failed",
-            message: response.onChainError,
-          });
-          console.warn(
-            "⚠️ Vote recorded in API, but on-chain failed:",
-            response.onChainError
-          );
-        } else {
-          setOnChainStatus({ voting: "api-only" });
-        }
+      const getVotePercentage = (weight: number) => {
+        return voteCounts.total.weight > 0
+          ? (weight / voteCounts.total.weight) * 100
+          : 0;
+      };
 
-        const updatedProposal = await daoService.getProposalById(proposalId);
-        if (updatedProposal.success && updatedProposal.data) {
-          setProposal(updatedProposal.data);
-        }
-      } else {
-        setOnChainStatus({ voting: "failed", message: response.message });
-        setError(response.message || "Failed to cast vote");
-      }
-    } catch (error) {
-      console.error("Error casting vote:", error);
-      setOnChainStatus({ voting: "failed", message: "Transaction failed" });
-      setError("Failed to cast vote");
-    } finally {
-      setVoting(false);
-      // Clear on-chain status after 5 seconds
-      setTimeout(() => setOnChainStatus({}), 5000);
-    }
-  };
+      return (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">{sectionTitle}</CardTitle>
+              <Badge variant={isActive ? "default" : "secondary"}>
+                {isActive ? "Active" : "Closed"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Vote Results */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Yes</span>
+                <span className="text-sm text-muted-foreground">
+                  {voteCounts.yes.count} votes ({voteCounts.yes.weight} weight)
+                </span>
+              </div>
+              <Progress
+                value={getVotePercentage(voteCounts.yes.weight)}
+                className="h-2"
+              />
 
-  const renderVotingSection = (isFeedback: boolean) => {
-    if (!proposal) return null;
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">No</span>
+                <span className="text-sm text-muted-foreground">
+                  {voteCounts.no.count} votes ({voteCounts.no.weight} weight)
+                </span>
+              </div>
+              <Progress
+                value={getVotePercentage(voteCounts.no.weight)}
+                className="h-2"
+              />
 
-    const sectionTitle = isFeedback ? "Feedback Voting" : "Main Voting";
-    const isActive = isFeedback
-      ? isFeedbackActive(proposal)
-      : isVotingActive(proposal);
-    const voteCounts = getVoteCounts(proposal, isFeedback);
-    const votePermission = canUserVote(
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Abstain</span>
+                <span className="text-sm text-muted-foreground">
+                  {voteCounts.abstain.count} votes ({voteCounts.abstain.weight}{" "}
+                  weight)
+                </span>
+              </div>
+              <Progress
+                value={getVotePercentage(voteCounts.abstain.weight)}
+                className="h-2"
+              />
+            </div>
+
+            {/* Detailed Vote Lists */}
+            <div className="space-y-2 pt-4 border-t">
+              <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                Vote Details
+              </h4>
+              <VotesList
+                proposalId={proposalId}
+                isFeedback={isFeedback}
+                house={!isFeedback ? proposal.voting_house : undefined}
+                voteType="YES"
+                count={voteCounts.yes.count}
+                weight={voteCounts.yes.weight}
+              />
+              <VotesList
+                proposalId={proposalId}
+                isFeedback={isFeedback}
+                house={!isFeedback ? proposal.voting_house : undefined}
+                voteType="NO"
+                count={voteCounts.no.count}
+                weight={voteCounts.no.weight}
+              />
+              <VotesList
+                proposalId={proposalId}
+                isFeedback={isFeedback}
+                house={!isFeedback ? proposal.voting_house : undefined}
+                voteType="ABSTAIN"
+                count={voteCounts.abstain.count}
+                weight={voteCounts.abstain.weight}
+              />
+            </div>
+
+            {/* Voting Buttons */}
+            {votePermission.canVote ? (
+              <div className="space-y-3">
+                {/* On-chain status indicator */}
+                {onChainStatus.voting && (
+                  <div className="flex justify-center">
+                    <OnChainStatusBadge
+                      status={onChainStatus.voting}
+                      message={onChainStatus.message}
+                    />
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => handleVote(VoteType.YES, isFeedback)}
+                    disabled={voting}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {voting ? "Processing..." : "Vote Yes"}
+                  </Button>
+                  <Button
+                    onClick={() => handleVote(VoteType.NO, isFeedback)}
+                    disabled={voting}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    {voting ? "Processing..." : "Vote No"}
+                  </Button>
+                  <Button
+                    onClick={() => handleVote(VoteType.ABSTAIN, isFeedback)}
+                    disabled={voting}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {voting ? "Processing..." : "Abstain"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>{votePermission.reason}</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      );
+    },
+    [
       proposal,
       address,
       userHouse,
       isOwner,
-      isFeedback
-    );
-
-    const getVotePercentage = (weight: number) => {
-      return voteCounts.total.weight > 0
-        ? (weight / voteCounts.total.weight) * 100
-        : 0;
-    };
-
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">{sectionTitle}</CardTitle>
-            <Badge variant={isActive ? "default" : "secondary"}>
-              {isActive ? "Active" : "Closed"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Vote Results */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Yes</span>
-              <span className="text-sm text-muted-foreground">
-                {voteCounts.yes.count} votes ({voteCounts.yes.weight} weight)
-              </span>
-            </div>
-            <Progress
-              value={getVotePercentage(voteCounts.yes.weight)}
-              className="h-2"
-            />
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">No</span>
-              <span className="text-sm text-muted-foreground">
-                {voteCounts.no.count} votes ({voteCounts.no.weight} weight)
-              </span>
-            </div>
-            <Progress
-              value={getVotePercentage(voteCounts.no.weight)}
-              className="h-2"
-            />
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Abstain</span>
-              <span className="text-sm text-muted-foreground">
-                {voteCounts.abstain.count} votes ({voteCounts.abstain.weight}{" "}
-                weight)
-              </span>
-            </div>
-            <Progress
-              value={getVotePercentage(voteCounts.abstain.weight)}
-              className="h-2"
-            />
-          </div>
-
-          {/* Detailed Vote Lists */}
-          <div className="space-y-2 pt-4 border-t">
-            <h4 className="text-sm font-medium text-muted-foreground mb-3">
-              Vote Details
-            </h4>
-            <VotesList
-              proposalId={proposalId}
-              isFeedback={isFeedback}
-              house={!isFeedback ? proposal.voting_house : undefined}
-              voteType="YES"
-              count={voteCounts.yes.count}
-              weight={voteCounts.yes.weight}
-            />
-            <VotesList
-              proposalId={proposalId}
-              isFeedback={isFeedback}
-              house={!isFeedback ? proposal.voting_house : undefined}
-              voteType="NO"
-              count={voteCounts.no.count}
-              weight={voteCounts.no.weight}
-            />
-            <VotesList
-              proposalId={proposalId}
-              isFeedback={isFeedback}
-              house={!isFeedback ? proposal.voting_house : undefined}
-              voteType="ABSTAIN"
-              count={voteCounts.abstain.count}
-              weight={voteCounts.abstain.weight}
-            />
-          </div>
-
-          {/* Voting Buttons */}
-          {votePermission.canVote ? (
-            <div className="space-y-3">
-              {/* On-chain status indicator */}
-              {onChainStatus.voting && (
-                <div className="flex justify-center">
-                  <OnChainStatusBadge
-                    status={onChainStatus.voting}
-                    message={onChainStatus.message}
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={() => handleVote(VoteType.YES, isFeedback)}
-                  disabled={voting}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {voting ? "Processing..." : "Vote Yes"}
-                </Button>
-                <Button
-                  onClick={() => handleVote(VoteType.NO, isFeedback)}
-                  disabled={voting}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  {voting ? "Processing..." : "Vote No"}
-                </Button>
-                <Button
-                  onClick={() => handleVote(VoteType.ABSTAIN, isFeedback)}
-                  disabled={voting}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  {voting ? "Processing..." : "Abstain"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Alert>
-              <AlertDescription>{votePermission.reason}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-    );
-  };
+      proposalId,
+      onChainStatus,
+      voting,
+      handleVote,
+    ]
+  );
 
   if (loading) {
     return (

@@ -101,43 +101,7 @@ contract GitHubProver is Prover {
             )
         );
 
-        return _containsUsername(loginsJson, username);
-    }
-
-    function _containsUsername(
-        string memory loginsJson,
-        string memory username
-    ) internal pure returns (bool) {
-        bytes memory loginsBytes = bytes(loginsJson);
-        bytes memory usernameBytes = bytes(username);
-
-        string memory quotedUsername = string(
-            abi.encodePacked('"', username, '"')
-        );
-        bytes memory quotedUsernameBytes = bytes(quotedUsername);
-
-        if (quotedUsernameBytes.length > loginsBytes.length) {
-            return false;
-        }
-
-        for (
-            uint i = 0;
-            i <= loginsBytes.length - quotedUsernameBytes.length;
-            i++
-        ) {
-            bool found = true;
-            for (uint j = 0; j < quotedUsernameBytes.length; j++) {
-                if (loginsBytes[i + j] != quotedUsernameBytes[j]) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                return true;
-            }
-        }
-
-        return false;
+        return (keccak256(bytes(loginsJson)) == keccak256(bytes(username)));
     }
 
     // Helper function to convert uint to string

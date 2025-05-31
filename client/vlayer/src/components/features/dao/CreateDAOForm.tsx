@@ -44,26 +44,32 @@ export const CreateDAOForm: React.FC<CreateDAOFormProps> = ({
 }) => {
   const { address } = useAccount();
   const [formData, setFormData] = useState<CreateDAORequest>({
-    name: "",
-    description: "",
-    logo: "",
+    name: "Covalent Network DAO",
+    description:
+      "A decentralized autonomous organization for the Covalent Network community, focused on unified APIs, data infrastructure, and empowering developers with blockchain data across multiple networks.",
+    logo: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop&crop=center",
     owner_address: address || "",
     tokens: [],
     socials: {
-      twitter: "",
-      telegram: "",
-      discord: "",
-      website: "",
+      twitter: "https://twitter.com/covalenthq",
+      telegram: "https://t.me/covalenthq",
+      discord: "https://discord.gg/covalenthq",
+      website: "https://covalenthq.com",
     },
-    tags: [],
-    email_subfix: "",
+    tags: ["data", "api", "infrastructure", "multichain", "developers"],
+    email_subfix: "covalenthq.com",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [tokens, setTokens] = useState<TokenInput[]>([]);
+  const [tokens, setTokens] = useState<TokenInput[]>([
+    {
+      token_address: "0x1111111111166b7FE7bd91427724B487980aFc69",
+      chain_id: 8453,
+    },
+  ]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

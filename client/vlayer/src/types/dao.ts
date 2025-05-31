@@ -154,6 +154,7 @@ export interface ProposalDetailResponse {
 
 export interface VoteRequest {
   proposal_id: string;
+  dao_id: string;
   wallet_address: string;
   vote: "YES" | "NO" | "ABSTAIN";
   is_feedback: boolean;
