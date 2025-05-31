@@ -266,10 +266,10 @@ export type Database = {
                     reward_token_chain: number | null;
                     start_time: string;
                     title: string;
-                    twitter_account_url: string;
+                    twitter_account_url: string | null;
                     twitter_follow_enabled: boolean;
                     twitter_like_enabled: boolean;
-                    twitter_post_url: string;
+                    twitter_post_url: string | null;
                     twitter_retweet_enabled: boolean;
                 };
                 Insert: {
@@ -284,10 +284,10 @@ export type Database = {
                     reward_token_chain?: number | null;
                     start_time: string;
                     title: string;
-                    twitter_account_url: string;
+                    twitter_account_url?: string | null;
                     twitter_follow_enabled: boolean;
                     twitter_like_enabled: boolean;
-                    twitter_post_url: string;
+                    twitter_post_url?: string | null;
                     twitter_retweet_enabled: boolean;
                 };
                 Update: {
@@ -302,10 +302,10 @@ export type Database = {
                     reward_token_chain?: number | null;
                     start_time?: string;
                     title?: string;
-                    twitter_account_url?: string;
+                    twitter_account_url?: string | null;
                     twitter_follow_enabled?: boolean;
                     twitter_like_enabled?: boolean;
-                    twitter_post_url?: string;
+                    twitter_post_url?: string | null;
                     twitter_retweet_enabled?: boolean;
                 };
                 Relationships: [
