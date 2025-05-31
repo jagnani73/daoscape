@@ -1,8 +1,13 @@
 import { validateQuery } from "../../middlewares";
 import { createError, HttpStatusCode } from "../../utils/functions";
 import {
+    getParticipantParamsSchema,
+    getParticipantsParamsSchema,
     joinQuestBodySchema,
     updateParticipantCompletionBodySchema,
+    updateParticipantCompletionParamsSchema,
+    type GetParticipantParams,
+    type GetParticipantsParams,
     type JoinQuestBody,
     type UpdateParticipantCompletionBody,
 } from "./quest-participant.schema";
@@ -46,7 +51,7 @@ const handleGetQuestParticipants = async (
     next: NextFunction
 ) => {
     try {
-        const { quest_id } = req.params;
+        const { quest_id } = req.params as GetParticipantsParams;
         const data = await getQuestParticipants(quest_id);
 
         res.json({
@@ -64,7 +69,7 @@ const handleGetParticipant = async (
     next: NextFunction
 ) => {
     try {
-        const { quest_id, member_id } = req.params;
+        const { quest_id, member_id } = req.params as GetParticipantParams;
         const data = await getParticipant(quest_id, member_id);
 
         if (!data) {
@@ -113,15 +118,21 @@ questParticipantRouter.post(
     handleJoinQuest
 );
 
-questParticipantRouter.get("/quest/:quest_id", handleGetQuestParticipants);
+questParticipantRouter.get(
+    "/quest/:quest_id",
+    validateQuery("params", getParticipantsParamsSchema),
+    handleGetQuestParticipants
+);
 
 questParticipantRouter.get(
     "/quest/:quest_id/member/:member_id",
+    validateQuery("params", getParticipantParamsSchema),
     handleGetParticipant
 );
 
 questParticipantRouter.patch(
     "/quest/:quest_id/member/:member_id/completion",
+    validateQuery("params", updateParticipantCompletionParamsSchema),
     validateQuery("body", updateParticipantCompletionBodySchema),
     handleUpdateParticipantCompletion
 );

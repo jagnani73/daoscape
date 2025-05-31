@@ -7,6 +7,11 @@ export const joinQuestBodySchema = z.object({
 
 export type JoinQuestBody = z.infer<typeof joinQuestBodySchema>;
 
+export const updateParticipantCompletionParamsSchema = z.object({
+    quest_id: z.string().uuid("Must be a valid UUID"),
+    member_id: z.string().trim().min(1, "Member ID is required"),
+});
+
 export const updateParticipantCompletionBodySchema = z
     .object({
         twitter_follow_completed: z.boolean().optional(),
@@ -30,3 +35,16 @@ export const updateParticipantCompletionBodySchema = z
 export type UpdateParticipantCompletionBody = z.infer<
     typeof updateParticipantCompletionBodySchema
 >;
+
+export const getParticipantParamsSchema = z.object({
+    quest_id: z.string().uuid("Must be a valid UUID"),
+    member_id: z.string().trim().min(1, "Member ID is required"),
+});
+
+export type GetParticipantParams = z.infer<typeof getParticipantParamsSchema>;
+
+export const getParticipantsParamsSchema = z.object({
+    quest_id: z.string().uuid("Must be a valid UUID"),
+});
+
+export type GetParticipantsParams = z.infer<typeof getParticipantsParamsSchema>;
