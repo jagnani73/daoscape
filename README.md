@@ -23,22 +23,22 @@ DAOscape introduces breakthrough algorithms that revolutionize DAO governance th
 - **Zero** Data Exposure
 - **∞** Verification Types
 
-## 🏆 Hackathon Prizes Targeting
+## 🏆 Hackathon Tracks
 
-### 🔍 Blockscout Integration ($20,000)
+### 🔍 Blockscout Integration
 
 - **✅ Best use of Blockscout** - Advanced API integration with BlockscoutService
 - **✅ Best Blockscout SDK Integration** - Real-time transaction monitoring and explorer feedback
 - **✅ Best Blockscout Merits Use Case** - Gamified cross-platform reputation system
 - **✅ Big Blockscout Explorer Pool Prize** - All 7 contracts deployed and verified
 
-### 🛡️ vLayer Integration ($10,000)
+### 🛡️ vLayer Integration
 
 - **✅ Privacy-preserving verification** - 3 prover/verifier contract pairs deployed
 - **✅ Web Proof generation** - Twitter, GitHub, and email domain verification without API access
 - **✅ Zero-knowledge social verification** - Cryptographic proofs for reputation building
 
-### 🔄 1inch Integration ($20,000)
+### 🔄 1inch Integration
 
 - **✅ Cross-chain token validation** - Multi-chain balance checking for DAO membership
 - **✅ Token security analysis** - DAO token trust factor assessment via Token Details API
@@ -285,52 +285,6 @@ new_reputation = old_reputation + feedback_score * participation_bonus;
 - **User Controlled Verification** - Members control what they verify and when, complete autonomy
 - **Trustless Verification System** - No reliance on centralized validators or authority figures
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- MetaMask or compatible Web3 wallet
-- Base Sepolia testnet ETH for transactions
-
-### Installation & Setup
-
-```bash
-# Clone the DAOscape repository
-git clone https://github.com/your-username/daoscape
-cd daoscape
-
-# Install all dependencies
-npm install
-
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your API keys and configuration
-
-# Start the development server
-npm run dev
-```
-
-### Environment Configuration
-
-```bash
-# vLayer Configuration
-VITE_VLAYER_API_KEY=your_vlayer_api_key
-
-# Blockscout Integration
-VITE_BLOCKSCOUT_API_KEY=your_blockscout_api_key
-
-# 1inch API Integration
-VITE_1INCH_API_KEY=your_1inch_api_key
-
-# Contract Deployment
-VITE_CONTRACT_ADDRESS=deployed_contract_address
-
-# Network Configuration
-VITE_CHAIN_ID=84532
-VITE_RPC_URL=https://sepolia.base.org
-```
-
 ## 📱 Platform Usage
 
 ### User Journey
@@ -369,7 +323,7 @@ VITE_RPC_URL=https://sepolia.base.org
 
 ### Technical Breakthroughs
 
-- ✅ **World's First** weighted heuristic voting algorithm with dynamic feedback loops
+- ✅ **First** weighted heuristic voting algorithm with dynamic feedback loops
 - ✅ **Cross-Chain Reputation** tracking via comprehensive 1inch API integration
 - ✅ **Privacy-Preserving Social Verification** using cutting-edge vLayer Web Proofs
 - ✅ **Gamified Reputation System** with Blockscout merits cross-platform integration
