@@ -21,12 +21,15 @@ const handleGetQuote = async (
     next: NextFunction
 ) => {
     try {
-        const { src, dst, amount } = req.body as GetQuoteBody;
+        const { src, dst, amount, srcChainId, dstChainId } =
+            req.body as GetQuoteBody;
 
         const data = await getSwapQuote({
             src,
             dst,
             amount,
+            srcChainId,
+            dstChainId,
         });
 
         res.json({
@@ -49,6 +52,9 @@ const handleExecuteSwap = async (
             dst,
             amount,
             from,
+            srcChainId,
+            dstChainId,
+            to,
             slippage,
             disableEstimate,
             allowPartialFill,
@@ -59,6 +65,9 @@ const handleExecuteSwap = async (
             dst,
             amount,
             from,
+            srcChainId,
+            dstChainId,
+            to,
             slippage,
             disableEstimate,
             allowPartialFill,
