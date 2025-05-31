@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Header } from "../shared/Header";
 import { Sidebar } from "../shared/navigation/Sidebar";
-import { ProposalsTab } from "../features/governance/ProposalsTab";
 import { ProofVerificationTab } from "../features/proof/ProofVerificationTab";
 import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { DAOTab } from "../features/dao/DAOTab";
@@ -13,7 +11,8 @@ import { useAppContext } from "../../contexts/AppContext";
 
 export const MainLayout: React.FC = () => {
   const { state, goToStepByKind } = useAppContext();
-  const [activeTab, setActiveTab] = useState("proposals");
+  const [activeTab, setActiveTab] = useState("daos");
+  const [selectedDAOId, setSelectedDAOId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!state.showHomepage) {
@@ -26,6 +25,42 @@ export const MainLayout: React.FC = () => {
     goToStepByKind(STEP_KIND.WELCOME);
   };
 
+  const handleDAOSelect = (daoId: string) => {
+    setSelectedDAOId(daoId === "" ? null : daoId);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab !== "daos") {
+      setSelectedDAOId(null);
+    }
+  };
+
+  const renderActiveContent = () => {
+    switch (activeTab) {
+      case "daos":
+        return (
+          <DAOTab selectedDAOId={selectedDAOId} onDAOSelect={handleDAOSelect} />
+        );
+      case "proof-verification":
+        return (
+          <ProofVerificationTab
+            state={state}
+            onStartProofVerification={handleStartProofVerification}
+            goToStepByKind={goToStepByKind}
+          />
+        );
+      case "analytics":
+        return <AnalyticsTab />;
+      case "profile":
+        return <ProfilePage />;
+      default:
+        return (
+          <DAOTab selectedDAOId={selectedDAOId} onDAOSelect={handleDAOSelect} />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <AutoCreateMember />
@@ -34,48 +69,14 @@ export const MainLayout: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex">
-          <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            onDAOSelect={handleDAOSelect}
+          />
 
           <div className="flex-1">
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-5 bg-muted">
-                <TabsTrigger value="proposals">Proposals</TabsTrigger>
-                <TabsTrigger value="daos">DAOs</TabsTrigger>
-                <TabsTrigger value="proof-verification">
-                  Proof Verification
-                </TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="proposals" className="mt-6">
-                <ProposalsTab />
-              </TabsContent>
-
-              <TabsContent value="daos" className="mt-6">
-                <DAOTab />
-              </TabsContent>
-
-              <TabsContent value="proof-verification" className="mt-6">
-                <ProofVerificationTab
-                  state={state}
-                  onStartProofVerification={handleStartProofVerification}
-                  goToStepByKind={goToStepByKind}
-                />
-              </TabsContent>
-
-              <TabsContent value="analytics" className="mt-6">
-                <AnalyticsTab />
-              </TabsContent>
-
-              <TabsContent value="profile" className="mt-6">
-                <ProfilePage />
-              </TabsContent>
-            </Tabs>
+            <div className="mt-6">{renderActiveContent()}</div>
           </div>
         </div>
       </div>
