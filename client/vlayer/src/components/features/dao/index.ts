@@ -10,6 +10,9 @@ export { JoinDAOButton } from "./details/JoinDAOButton";
 // DAO Proposals
 export { CreateProposal } from "./proposals/CreateProposal";
 
+// DAO Voting
+export { VotesList } from "./VotesList";
+
 // DAO Tab Component
 export { DAOTab } from "./DAOTab";
 

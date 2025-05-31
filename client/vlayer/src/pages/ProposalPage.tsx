@@ -33,6 +33,7 @@ import {
 import { useMemberData } from "../hooks/useMemberData";
 import { OnChainStatusBadge } from "../components/ui/OnChainStatusBadge";
 import { ProposalChat } from "../components/features/dao/chat/ProposalChat";
+import { VotesList } from "../components/features/dao/VotesList";
 
 interface ProposalPageProps {
   proposalId: string;
@@ -262,6 +263,37 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
             <Progress
               value={getVotePercentage(voteCounts.abstain.weight)}
               className="h-2"
+            />
+          </div>
+
+          {/* Detailed Vote Lists */}
+          <div className="space-y-2 pt-4 border-t">
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">
+              Vote Details
+            </h4>
+            <VotesList
+              proposalId={proposalId}
+              isFeedback={isFeedback}
+              house={!isFeedback ? proposal.voting_house : undefined}
+              voteType="YES"
+              count={voteCounts.yes.count}
+              weight={voteCounts.yes.weight}
+            />
+            <VotesList
+              proposalId={proposalId}
+              isFeedback={isFeedback}
+              house={!isFeedback ? proposal.voting_house : undefined}
+              voteType="NO"
+              count={voteCounts.no.count}
+              weight={voteCounts.no.weight}
+            />
+            <VotesList
+              proposalId={proposalId}
+              isFeedback={isFeedback}
+              house={!isFeedback ? proposal.voting_house : undefined}
+              voteType="ABSTAIN"
+              count={voteCounts.abstain.count}
+              weight={voteCounts.abstain.weight}
             />
           </div>
 

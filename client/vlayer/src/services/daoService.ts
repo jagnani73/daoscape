@@ -16,6 +16,7 @@ import {
   ConcludeProposalRequest,
   ConcludeProposalResponse,
   Proposal,
+  Vote,
 } from "../types/dao";
 
 const API_BASE_URL = import.meta.env.VITE_BE_API_URL;
@@ -361,6 +362,43 @@ export const daoService = {
       return {
         success: false,
         message: error instanceof Error ? error.message : "Failed to cast vote",
+      };
+    }
+  },
+
+  getVotesForProposal: async (
+    proposalId: string,
+    isFeedback: boolean,
+    house?: string
+  ): Promise<{ success: boolean; data?: Vote[]; message?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/vote/proposal`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          proposal_id: proposalId,
+          is_feedback: isFeedback,
+          house: house || null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching votes:", error);
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to fetch votes",
       };
     }
   },

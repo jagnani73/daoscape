@@ -139,6 +139,7 @@ export interface Vote {
   created_at: string;
   is_feedback: boolean;
   proposal_id: string;
+  house: string;
 }
 
 export interface ProposalWithVotes extends Proposal {
