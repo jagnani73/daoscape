@@ -13,10 +13,10 @@ export const createDaoBodySchema = z.object({
         })
     ),
     socials: z.object({
-        twitter: z.string().trim().url().optional(),
-        telegram: z.string().trim().url().optional(),
-        discord: z.string().trim().url().optional(),
-        website: z.string().trim().url().optional(),
+        twitter: z.string().trim().url().nullable().optional(),
+        telegram: z.string().trim().url().nullable().optional(),
+        discord: z.string().trim().url().nullable().optional(),
+        website: z.string().trim().url().nullable().optional(),
     }),
     tags: z.array(z.string().trim()).optional().default([]),
     email_subfix: z.string().trim(),
