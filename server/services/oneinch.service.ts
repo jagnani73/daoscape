@@ -19,8 +19,15 @@ export class OneinchService {
                 },
             });
 
+            if (!process.env.MAKER_PRIVATE_KEY || !process.env.WEB3_NODE_URL) {
+                console.error(
+                    "Missing MAKER_PRIVATE_KEY or WEB3_NODE_URL for Fusion SDK."
+                );
+                process.exit(1);
+            }
+
             const blockchainProvider = new PrivateKeyProviderConnector(
-                process.env.MAKER_PRIVATE_KEY!,
+                process.env.MAKER_PRIVATE_KEY,
                 new Web3(process.env.WEB3_NODE_URL!) as any
             );
 
