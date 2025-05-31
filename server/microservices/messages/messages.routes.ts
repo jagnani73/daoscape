@@ -68,8 +68,8 @@ messagesRouter.post(
     handleCreateMessage
 );
 
-messagesRouter.get(
-    "/",
+messagesRouter.post(
+    "/history",
     validateQuery("body", messageHistoryBodySchema),
     handleGetMessages
 );

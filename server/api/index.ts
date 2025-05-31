@@ -2,6 +2,7 @@ import {
     daoRouter,
     memberRouter,
     membershipRouter,
+    messagesRouter,
     proposalRouter,
     questParticipantRouter,
     questRouter,
@@ -41,6 +42,7 @@ app.use("/api/v1/vote", voteRouter);
 app.use("/api/v1/membership", membershipRouter);
 app.use("/api/v1/quest", questRouter);
 app.use("/api/v1/quest-participant", questParticipantRouter);
+app.use("/api/v1/messages", messagesRouter);
 
 app.use("*", (_req: Request, res: Response) => {
     res.status(404).json({
