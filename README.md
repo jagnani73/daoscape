@@ -389,26 +389,6 @@ VITE_RPC_URL=https://sepolia.base.org
 - **Creates Cross-Platform Reputation** - Universal reputation system across all DAOs
 - **Establishes Accountability Standards** - Feedback loops ensure responsible governance
 
-## 🔮 Roadmap & Future Development
-
-### Phase 1: Enhanced Verification Ecosystem (Q2 2024)
-
-- Advanced GitHub contribution analysis with code quality metrics
-- LinkedIn professional network verification integration
-- Cross-platform reputation bridges with existing DAO tools
-
-### Phase 2: Advanced Governance Mechanisms (Q3 2024)
-
-- Quadratic voting integration for more nuanced preference expression
-- Delegation and liquid democracy for complex governance structures
-- Multi-signature proposal execution with automated implementation
-
-### Phase 3: Ecosystem Expansion (Q4 2024)
-
-- Cross-chain deployment (Ethereum mainnet, Polygon, Arbitrum, Optimism)
-- Integration with major DAO platforms (Snapshot, Tally, Aragon)
-- Enterprise governance solutions for traditional organizations
-
 ## 🤝 Contributing to DAOscape
 
 We welcome contributions from developers, governance experts, and privacy advocates. See our [Contributing Guidelines](CONTRIBUTING.md) for detailed information on:
@@ -427,7 +407,7 @@ DAOscape is licensed under the MIT License - see the [LICENSE](LICENSE) file for
 - **vLayer Team** - Revolutionary web proof technology enabling privacy-preserving verification
 - **Blockscout Team** - Transparent blockchain exploration, contract verification, and merit system
 - **1inch Team** - Cross-chain liquidity infrastructure and comprehensive token APIs
-- **ETH Prague Organizers** - Supporting innovation in decentralized governance and privacy
+- **ETHGlobal Prague Organizers** - Supporting innovation in decentralized governance and privacy
 - **Base Protocol Team** - Providing fast, low-cost blockchain infrastructure for DAO operations
 
 ---
