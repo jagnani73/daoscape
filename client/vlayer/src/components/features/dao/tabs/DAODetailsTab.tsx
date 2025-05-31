@@ -42,73 +42,6 @@ export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* Token Requirements */}
-      <TokenDetailsCard tokens={dao.tokens} daoName={dao.name} />
-
-      {/* Join DAO Section - Only show if user is not a member */}
-      {!isDAOMember(membershipStatus) && (
-        <>
-          {isConnected ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Join This DAO</CardTitle>
-                <CardDescription>
-                  {membershipStatus === "not_member"
-                    ? "Become a member to participate in governance and access exclusive benefits."
-                    : membershipStatus === "pending"
-                    ? "Your membership request is being processed. You'll be notified once approved."
-                    : "You are already a member of this DAO!"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {canShowJoinButton(isConnected, membershipStatus) ? (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Message (Optional)
-                      </label>
-                      <textarea
-                        value={joinMessage}
-                        onChange={(e) => setJoinMessage(e.target.value)}
-                        placeholder="Tell the DAO why you want to join..."
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
-                        rows={3}
-                      />
-                    </div>
-                    <JoinDAOButton
-                      daoId={dao.dao_id}
-                      walletAddress={address}
-                      onJoinSuccess={handleJoinSuccess}
-                      onJoinError={handleJoinError}
-                      onRefetchUserDAOs={onRefetchUserDAOs}
-                    />
-                  </>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground">
-                      {membershipStatus === "pending" &&
-                        "Your membership request is pending approval."}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <h3 className="text-lg font-semibold mb-2">
-                  Connect Your Wallet
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  You need to connect your wallet to join this DAO.
-                </p>
-                <w3m-button />
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
-
       {/* DAO Information */}
       <Card>
         <CardHeader>
@@ -201,6 +134,75 @@ export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Token Requirements */}
+      <TokenDetailsCard tokens={dao.tokens} daoName={dao.name} />
+
+      {/* Join DAO Section - Only show if user is not a member */}
+      {!isDAOMember(membershipStatus) && (
+        <>
+          {isConnected ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Join This DAO</CardTitle>
+                <CardDescription>
+                  {membershipStatus === "not_member"
+                    ? "Become a member to participate in governance and access exclusive benefits."
+                    : membershipStatus === "pending"
+                    ? "Your membership request is being processed. You'll be notified once approved."
+                    : "You are already a member of this DAO!"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {canShowJoinButton(isConnected, membershipStatus) ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Message (Optional)
+                      </label>
+                      <textarea
+                        value={joinMessage}
+                        onChange={(e) => setJoinMessage(e.target.value)}
+                        placeholder="Tell the DAO why you want to join..."
+                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+                        rows={3}
+                      />
+                    </div>
+                    <JoinDAOButton
+                      daoId={dao.dao_id}
+                      walletAddress={address}
+                      onJoinSuccess={handleJoinSuccess}
+                      onJoinError={handleJoinError}
+                      onRefetchUserDAOs={onRefetchUserDAOs}
+                    />
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">
+                      {membershipStatus === "pending" &&
+                        "Your membership request is pending approval."}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <h3 className="text-lg font-semibold mb-2">
+                  Connect Your Wallet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  You need to connect your wallet to join this DAO.
+                </p>
+                <div className="flex justify-center">
+                  <w3m-button />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 };

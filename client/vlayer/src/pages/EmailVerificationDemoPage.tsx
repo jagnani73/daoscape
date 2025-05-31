@@ -103,7 +103,9 @@ export const EmailVerificationDemoPage: React.FC = () => {
                 You need to connect your wallet to participate in email
                 verification.
               </p>
-              <w3m-button />
+              <div className="flex justify-center">
+                <w3m-button />
+              </div>
             </div>
           )}
         </div>

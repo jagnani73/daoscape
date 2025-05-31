@@ -60,23 +60,15 @@ export const IPFSMetadata: React.FC<IPFSMetadataProps> = ({
 
   if (compact) {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div className={`flex items-center gap-2 cursor-pointer ${className}`}>
         <Badge
           variant="outline"
+          onClick={handleOpenIPFS}
           className="text-xs bg-blue-50 text-blue-700 border-blue-200"
         >
           <FileText className="w-3 h-3 mr-1" />
           IPFS Metadata
         </Badge>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleOpenIPFS}
-          className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
-        >
-          <ExternalLink className="w-3 h-3 mr-1" />
-          View
-        </Button>
       </div>
     );
   }

@@ -143,7 +143,9 @@ export const DAOReputationTab: React.FC<DAOReputationTabProps> = ({
               You need to connect your wallet to participate in reputation
               activities.
             </p>
-            <w3m-button />
+            <div className="flex justify-center">
+              <w3m-button />
+            </div>
           </CardContent>
         </Card>
       ) : !isMember ? (

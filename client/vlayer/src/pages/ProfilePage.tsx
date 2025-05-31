@@ -370,166 +370,132 @@ const ProfileContent: React.FC = () => {
       )}
 
       {/* Merits Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>🏆</span>
-              <span>Blockscout Merits</span>
-            </CardTitle>
-            <CardDescription>
-              Your activity rewards and ranking in the Blockscout ecosystem
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Loading merits data...
-                </p>
-              </div>
-            ) : meritsData ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Total Balance
-                    </p>
-                    <p className="text-2xl font-bold">
-                      {meritsData.total_balance}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Rank</p>
-                    <p className="text-2xl font-bold">#{meritsData.rank}</p>
-                  </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>🏆</span>
+            <span>Blockscout Merits</span>
+          </CardTitle>
+          <CardDescription>
+            Your activity rewards and ranking in the Blockscout ecosystem
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Loading merits data...
+              </p>
+            </div>
+          ) : meritsData ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Balance</p>
+                  <p className="text-2xl font-bold">
+                    {meritsData.total_balance}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Referrals</p>
-                    <p className="text-lg font-semibold">
-                      {meritsData.referrals}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Top Percent</p>
-                    <Badge variant="secondary">
-                      {meritsData.top_percent?.toFixed(2)}%
-                    </Badge>
-                  </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Rank</p>
+                  <p className="text-2xl font-bold">#{meritsData.rank}</p>
                 </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Referrals</p>
+                  <p className="text-lg font-semibold">
+                    {meritsData.referrals}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Top Percent</p>
+                  <Badge variant="secondary">
+                    {meritsData.top_percent?.toFixed(2)}%
+                  </Badge>
+                </div>
+
                 <div>
                   <p className="text-sm text-muted-foreground">Users Below</p>
                   <p className="text-lg font-semibold">
                     {meritsData.users_below}
                   </p>
                 </div>
+
                 {meritsData.registered_at && (
                   <div>
                     <p className="text-sm text-muted-foreground">Registered</p>
-                    <p className="text-sm">
+                    <p className="text-lg font-semibold">
                       {new Date(meritsData.registered_at).toLocaleDateString()}
                     </p>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">
-                  No merits data available. You may need to register for the
-                  Blockscout Merits program.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Transaction History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📊</span>
-              <span>Transaction History</span>
-            </CardTitle>
-            <CardDescription>
-              View your transaction history using Blockscout explorer
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button
-                onClick={showTransactionHistory}
-                className="w-full"
-                variant="default"
-              >
-                View My Transactions
-              </Button>
-              <Button
-                onClick={showAllTransactions}
-                className="w-full"
-                variant="outline"
-              >
-                View All Chain Transactions
-              </Button>
-              <div className="text-xs text-muted-foreground text-center">
-                Powered by Blockscout SDK
-              </div>
+              {/* Authenticated Balance Details */}
+              {isAuthenticated && userBalance && (
+                <>
+                  <hr className="my-4" />
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground">
+                      Detailed Balance Information
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center p-2 bg-muted rounded">
+                        <p className="text-xs text-muted-foreground">Staked</p>
+                        <p className="text-sm font-bold">
+                          {userBalance.staked}
+                        </p>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <p className="text-xs text-muted-foreground">
+                          Unstaked
+                        </p>
+                        <p className="text-sm font-bold">
+                          {userBalance.unstaked}
+                        </p>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                        <p className="text-sm font-bold">
+                          {userBalance.pending_referral_rewards}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-center p-2 bg-muted rounded">
+                        <p className="text-xs text-muted-foreground">
+                          Staking Rewards
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {userBalance.total_staking_rewards}
+                        </p>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <p className="text-xs text-muted-foreground">
+                          Referral Rewards
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {userBalance.total_referral_rewards}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Authenticated User Data */}
-      {isAuthenticated && userBalance && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>💰</span>
-              <span>Detailed Balance Information</span>
-            </CardTitle>
-            <CardDescription>
-              Authenticated view of your Blockscout Merits balance breakdown
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Total Balance</p>
-                <p className="text-xl font-bold">{userBalance.total}</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Staked</p>
-                <p className="text-xl font-bold">{userBalance.staked}</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Unstaked</p>
-                <p className="text-xl font-bold">{userBalance.unstaked}</p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Staking Rewards</p>
-                <p className="text-lg font-semibold">
-                  {userBalance.total_staking_rewards}
-                </p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Referral Rewards
-                </p>
-                <p className="text-lg font-semibold">
-                  {userBalance.total_referral_rewards}
-                </p>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Pending Rewards</p>
-                <p className="text-lg font-semibold">
-                  {userBalance.pending_referral_rewards}
-                </p>
-              </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">
+                No merits data available. You may need to register for the
+                Blockscout Merits program.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Activity Logs */}
       {isAuthenticated && activityLogs.length > 0 && (
@@ -577,6 +543,45 @@ const ProfileContent: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Transaction History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <span>📊</span>
+            <span>Transaction History</span>
+          </CardTitle>
+          <CardDescription>
+            View your transaction history using Blockscout explorer
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex gap-4 items-center">
+              <Button
+                onClick={showTransactionHistory}
+                className="w-full"
+                variant="default"
+                size="sm"
+              >
+                View My Transactions
+              </Button>
+              <Button
+                onClick={showAllTransactions}
+                className="w-full"
+                variant="outline"
+                size="sm"
+              >
+                View All Chain Transactions
+              </Button>
+            </div>
+
+            <div className="text-xs text-muted-foreground text-center pt-1">
+              Powered by Blockscout SDK
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Additional Stats */}
       <Card>
