@@ -195,12 +195,12 @@ export const useGovernanceContract = (): GovernanceContractResult => {
           const requestId = Math.random().toString(36);
           setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
 
-          // writeContract({
-          //   address: governanceAddress,
-          //   abi: governanceAbi.abi,
-          //   functionName: "voteYes",
-          //   args: [daoId, proposalId],
-          // });
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "voteYes",
+            args: [daoId, proposalId],
+          });
 
           setTimeout(() => {
             setPendingResolvers((prev) => {
@@ -209,7 +209,7 @@ export const useGovernanceContract = (): GovernanceContractResult => {
               return newMap;
             });
             reject(new Error("Transaction timeout"));
-          }, 10000);
+          }, 5000);
         });
       } catch (error) {
         setIsLoading(false);
