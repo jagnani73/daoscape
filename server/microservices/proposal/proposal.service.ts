@@ -51,9 +51,18 @@ export const createProposal = async ({
         data
     );
 
+    await SupabaseService.getSupabase("admin")
+        .from("proposals")
+        .update({
+            akave_url: akaveUrl,
+        })
+        .eq("proposal_id", data.proposal_id)
+        .select()
+        .single();
+
     return {
-        proposal: data,
-        akave_storage_url: akaveUrl,
+        ...data,
+        akave_url: akaveUrl,
     };
 };
 
@@ -153,8 +162,6 @@ export const concludeProposal = async (
     const result: VOTE_TYPES =
         weightedYes > weightedNo ? VOTE_TYPES.YES : VOTE_TYPES.NO;
 
-    let akaveUrl: string | null = null;
-
     if (!is_feedback) {
         const { data, error } = await SupabaseService.getSupabase("admin")
             .from("proposals")
@@ -168,7 +175,7 @@ export const concludeProposal = async (
             throw error;
         }
 
-        akaveUrl = AkaveService.getInstance().updateProposal(proposal_id, data);
+        AkaveService.getInstance().updateProposal(proposal_id, data);
 
         return data;
     } else {
@@ -241,12 +248,11 @@ export const concludeProposal = async (
             ]);
         }
 
-        akaveUrl = AkaveService.getInstance().updateProposal(proposal_id, data);
+        AkaveService.getInstance().updateProposal(proposal_id, data);
 
         return {
             merits,
             proposal: data,
-            akave_storage_url: akaveUrl,
         };
     }
 };

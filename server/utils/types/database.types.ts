@@ -151,6 +151,7 @@ export type Database = {
             };
             proposals: {
                 Row: {
+                    akave_url: string;
                     conclusion:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;
@@ -168,6 +169,7 @@ export type Database = {
                     voting_start: string;
                 };
                 Insert: {
+                    akave_url?: string;
                     conclusion?:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;
@@ -185,6 +187,7 @@ export type Database = {
                     voting_start: string;
                 };
                 Update: {
+                    akave_url?: string;
                     conclusion?:
                         | Database["public"]["Enums"]["VOTE_TYPES"]
                         | null;

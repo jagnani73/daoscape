@@ -134,7 +134,7 @@ export class AkaveService {
                 `Failed to store proposal ${proposalId} in Akave O3:`,
                 error
             );
-            return null;
+            return "";
         }
     }
 
