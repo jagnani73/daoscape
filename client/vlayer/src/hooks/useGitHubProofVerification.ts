@@ -17,8 +17,8 @@ import { WebProofConfig, ProveArgs } from "@vlayer/sdk";
 import { Abi, ContractFunctionName } from "viem";
 import { startPage, expectUrl, notarize } from "@vlayer/sdk/web_proof";
 import { UseChainError, WebProofError } from "../errors";
-import proverSpec from "../../../out/GitHubProver.sol/GitHubProver.json";
-import verifierSpec from "../../../out/GitHubVerifier.sol/GitHubVerifier.json";
+import proverSpec from "../constants/GitHubProver.json";
+import verifierSpec from "../constants/GitHubVerifier.json";
 import { AbiStateMutability, ContractFunctionArgs } from "viem";
 import debug from "debug";
 

@@ -7,7 +7,7 @@ import {
 } from "wagmi";
 import { useLocalStorage } from "usehooks-ts";
 import { useNotification } from "@blockscout/app-sdk";
-import dynamicTwitterVerifier from "../../../../../../out/DynamicTwitterVerifier.sol/DynamicTwitterVerifier.json";
+import dynamicTwitterVerifier from "../../../../constants/DynamicTwitterVerifier.json";
 import { VerifyStepPresentational } from "./Presentational";
 import { ensureBalance } from "../../../../utils/ethFaucet";
 import { useAppContext } from "../../../../contexts/AppContext";

@@ -8,7 +8,7 @@ import {
 } from "wagmi";
 import { useNotification } from "@blockscout/app-sdk";
 import { ensureBalance } from "../utils/ethFaucet";
-import governanceAbi from "../../../out/Governance.sol/Governance.json";
+import governanceAbi from "../constants/Governance.json";
 
 export interface ProposalData {
   title: string;

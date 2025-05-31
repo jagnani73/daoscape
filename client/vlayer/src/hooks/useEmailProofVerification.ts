@@ -12,8 +12,8 @@ import {
 } from "@vlayer/react";
 import { useNotification } from "@blockscout/app-sdk";
 import { preverifyEmail } from "@vlayer/sdk";
-import proverSpec from "../../../out/EmailDomainProver.sol/EmailDomainProver.json";
-import verifierSpec from "../../../out/EmailProofVerifier.sol/EmailDomainVerifier.json";
+import proverSpec from "../constants/EmailDomainProver.json";
+import verifierSpec from "../constants/EmailDomainVerifier.json";
 import { AbiStateMutability, ContractFunctionArgs } from "viem";
 import debug from "debug";
 

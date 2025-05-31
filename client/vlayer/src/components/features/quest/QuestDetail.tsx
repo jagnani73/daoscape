@@ -13,7 +13,7 @@ import {
   useBalance,
 } from "wagmi";
 import { useNotification } from "@blockscout/app-sdk";
-import dynamicTwitterVerifier from "../../../../../out/DynamicTwitterVerifier.sol/DynamicTwitterVerifier.json";
+import dynamicTwitterVerifier from "../../../constants/DynamicTwitterVerifier.json";
 import { ensureBalance } from "../../../utils/ethFaucet";
 import { Button } from "../../ui/button";
 import {

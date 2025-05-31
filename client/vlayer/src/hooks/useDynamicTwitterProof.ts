@@ -10,7 +10,7 @@ import { WebProofConfig, ProveArgs } from "@vlayer/sdk";
 import { Abi, ContractFunctionName } from "viem";
 import { startPage, expectUrl, notarize } from "@vlayer/sdk/web_proof";
 import { UseChainError, WebProofError } from "../errors";
-import dynamicTwitterProver from "../../../out/DynamicTwitterProver.sol/DynamicTwitterProver.json";
+import dynamicTwitterProver from "../constants/DynamicTwitterProver.json";
 
 // Action types enum matching the contract
 export enum ActionType {
