@@ -12,6 +12,7 @@ import {
   Separator,
   Button,
   Badge,
+  IPFSMetadata,
 } from "../components/ui";
 import { ProposalWithVotes, VoteType, DAO, Member } from "../types/dao";
 import { daoService } from "../services/daoService";
@@ -357,7 +358,7 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
               <CardDescription className="text-base mb-4">
                 {proposal.description}
               </CardDescription>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-4">
                 <Badge className={statusBadge.className}>
                   {statusBadge.text}
                 </Badge>
@@ -370,6 +371,10 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
                     proposalPhase.slice(1)}
                 </Badge>
               </div>
+              {/* IPFS Metadata Display */}
+              {proposal.akave_url && (
+                <IPFSMetadata akaveUrl={proposal.akave_url} compact />
+              )}
             </div>
           </div>
         </CardHeader>
@@ -403,6 +408,9 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* IPFS Metadata Section */}
+      {proposal.akave_url && <IPFSMetadata akaveUrl={proposal.akave_url} />}
 
       {/* Main Voting Section */}
       {(proposalPhase === "voting" ||

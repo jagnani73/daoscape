@@ -10,6 +10,7 @@ import {
 import { Badge } from "../../../ui/badge";
 import { Button } from "../../../ui/button";
 import { EmailVerificationForDAOContainer } from "../EmailVerificationForDAO/Container";
+import { GitHubVerificationForDAOContainer } from "../GitHubVerificationForDAO/Container";
 import { DAO, MembershipStatus } from "../../../../types/dao";
 import { isDAOMember } from "../../../../utils/daoHelpers";
 
@@ -28,6 +29,7 @@ export const DAOReputationTab: React.FC<DAOReputationTabProps> = ({
 }) => {
   const { address } = useAccount();
   const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [showGitHubVerification, setShowGitHubVerification] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>();
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -51,6 +53,24 @@ export const DAOReputationTab: React.FC<DAOReputationTabProps> = ({
     setTimeout(() => setErrorMessage(undefined), 5000);
   };
 
+  const handleGitHubVerificationSuccess = () => {
+    setSuccessMessage(
+      "GitHub verification completed! You've earned reputation points."
+    );
+    setShowGitHubVerification(false);
+    onReputationEarned?.();
+
+    // Clear success message after 5 seconds
+    setTimeout(() => setSuccessMessage(undefined), 5000);
+  };
+
+  const handleGitHubVerificationError = (error: string) => {
+    setErrorMessage(error);
+
+    // Clear error message after 5 seconds
+    setTimeout(() => setErrorMessage(undefined), 5000);
+  };
+
   if (showEmailVerification) {
     return (
       <div className="space-y-4">
@@ -65,6 +85,25 @@ export const DAOReputationTab: React.FC<DAOReputationTabProps> = ({
           daoId={dao.dao_id}
           onSuccess={handleEmailVerificationSuccess}
           onError={handleEmailVerificationError}
+        />
+      </div>
+    );
+  }
+
+  if (showGitHubVerification) {
+    return (
+      <div className="space-y-4">
+        <Button
+          variant="outline"
+          onClick={() => setShowGitHubVerification(false)}
+          className="mb-4"
+        >
+          ← Back to Reputation Activities
+        </Button>
+        <GitHubVerificationForDAOContainer
+          daoId={dao.dao_id}
+          onSuccess={handleGitHubVerificationSuccess}
+          onError={handleGitHubVerificationError}
         />
       </div>
     );
@@ -167,6 +206,63 @@ export const DAOReputationTab: React.FC<DAOReputationTabProps> = ({
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
                 Start Email Verification
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* GitHub Verification Activity */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center space-x-2">
+                    <span>🐙</span>
+                    <span>GitHub Contribution Verification</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Prove your contributions to GitHub repositories using
+                    cryptographic verification
+                  </CardDescription>
+                </div>
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                  🏆 High Reputation
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-600">✓</span>
+                  <span>Contribution proof</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-600">✓</span>
+                  <span>On-chain verification</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-600">✓</span>
+                  <span>Repository validation</span>
+                </div>
+              </div>
+
+              <p className="text-gray-600 text-sm">
+                Verify your GitHub contributions to specific repositories
+                through zero-knowledge proofs. This demonstrates your technical
+                skills and commitment to open source development.
+              </p>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 text-xs">
+                  <strong>Example:</strong> Verify contributions to
+                  covalenthq/ai-agent-sdk repository
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setShowGitHubVerification(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                Start GitHub Verification
               </Button>
             </CardContent>
           </Card>

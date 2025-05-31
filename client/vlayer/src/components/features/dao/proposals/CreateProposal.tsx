@@ -9,6 +9,7 @@ import {
 } from "../../../ui/card";
 import { Button } from "../../../ui/button";
 import { Badge } from "../../../ui/badge";
+import { IPFSMetadata } from "../../../ui/IPFSMetadata";
 import { OnChainStatusBadge } from "../../../ui/OnChainStatusBadge";
 import { daoService } from "../../../../services/daoService";
 import { governanceService } from "../../../../services/governanceService";
@@ -36,6 +37,7 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [createdProposalData, setCreatedProposalData] = useState<any>(null);
   const { address } = useAccount();
   const governanceContract = useGovernanceContract();
   const [onChainStatus, setOnChainStatus] = useState<{
@@ -53,7 +55,10 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
     }));
     // Clear error when user starts typing
     if (error) setError(null);
-    if (success) setSuccess(null);
+    if (success) {
+      setSuccess(null);
+      setCreatedProposalData(null);
+    }
   };
 
   const validateForm = (): string | null => {
@@ -105,15 +110,12 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
         feedback_end: new Date(formData.feedback_end).toISOString(),
       };
 
-      // Generate a unique proposal ID for on-chain use
-      const proposalId = governanceService.generateProposalId();
-
-      // Use hybrid proposal creation that calls both API and on-chain contract
+      // Use hybrid proposal creation that creates in API first, then on-chain with the returned ID
       const result = await governanceService.createHybridProposal(
         proposalData,
         {
           daoId: daoId,
-          proposalId: proposalId,
+          proposalId: "", // This will be replaced by the backend-generated ID
           title: formData.title.trim(),
           creator: address,
           startTime: new Date(formData.voting_start),
@@ -125,6 +127,9 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
       );
 
       if (result.success) {
+        // Store the created proposal data for IPFS display
+        setCreatedProposalData(result.data);
+
         // Update on-chain status based on response
         if (result.onChainCreated) {
           setOnChainStatus({ creation: "success" });
@@ -134,7 +139,9 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
             creation: "failed",
             message: result.onChainError,
           });
-          setSuccess(`"✅ Proposal created`);
+          setSuccess(
+            "✅ Proposal created in backend (on-chain creation failed)"
+          );
         } else {
           setOnChainStatus({ creation: "api-only" });
           setSuccess("Proposal created successfully!");
@@ -283,8 +290,14 @@ export const CreateProposal: React.FC<CreateProposalProps> = ({
           )}
 
           {success && (
-            <div className="p-3 rounded-md bg-green-50 border border-green-200">
-              <p className="text-sm text-green-800">{success}</p>
+            <div className="space-y-3">
+              <div className="p-3 rounded-md bg-green-50 border border-green-200">
+                <p className="text-sm text-green-800">{success}</p>
+              </div>
+              {/* Show IPFS metadata if available */}
+              {createdProposalData?.akave_url && (
+                <IPFSMetadata akaveUrl={createdProposalData.akave_url} />
+              )}
             </div>
           )}
 

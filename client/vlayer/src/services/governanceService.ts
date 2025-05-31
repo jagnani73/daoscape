@@ -1,4 +1,5 @@
 import { daoService } from "./daoService";
+import { executeAPIAfterTransaction } from "../utils/transactionWithAPI";
 import type {
   VoteRequest,
   VoteResponse,
@@ -61,16 +62,51 @@ export interface HybridVoteResponse extends VoteResponse {
 }
 
 export const governanceService = {
-  // Hybrid function: Create proposal both on-chain and in API
+  generateProposalId: (): string => {
+    return `proposal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  },
+
+  // Get proposal data for on-chain operations
+  getOnChainProposalData: async (
+    proposalId: string
+  ): Promise<OnChainProposalData | null> => {
+    try {
+      const proposal = await daoService.getProposalById(proposalId);
+      if (!proposal.success || !proposal.data) {
+        return null;
+      }
+
+      const data = proposal.data;
+      return {
+        daoId: data.dao_id,
+        proposalId: data.proposal_id,
+        title: data.title,
+        creator: data.dao_id, // Using dao_id as creator since creator_address doesn't exist
+        active: true,
+        startTime: BigInt(
+          Math.floor(new Date(data.voting_start).getTime() / 1000)
+        ),
+        endTime: BigInt(Math.floor(new Date(data.voting_end).getTime() / 1000)),
+      };
+    } catch (error) {
+      console.error("Error fetching on-chain proposal data:", error);
+      return null;
+    }
+  },
+
+  // Enhanced hybrid function: Create proposal in API first, then on-chain with the returned ID
   createHybridProposal: async (
     proposalData: CreateProposalRequest,
     onChainParams: CreateOnChainProposalParams,
     contractHooks: {
-      createProposal: (params: any) => Promise<void>;
+      createProposal: (params: any) => Promise<`0x${string}`>;
     }
   ): Promise<HybridCreateProposalResponse> => {
     try {
-      // First create the proposal in the API (existing functionality)
+      console.log("🚀 Starting hybrid proposal creation...");
+
+      // First create the proposal in the backend API
+      console.log("📝 Creating proposal in backend API...");
       const apiResponse = await daoService.createProposal(proposalData);
 
       if (!apiResponse.success) {
@@ -79,11 +115,20 @@ export const governanceService = {
         );
       }
 
-      // Then create the proposal on-chain
+      // Extract the proposal ID from the API response
+      const backendProposalId = apiResponse.data?.proposal_id;
+      if (!backendProposalId) {
+        throw new Error("No proposal ID returned from backend");
+      }
+
+      console.log(`✅ Proposal created in API with ID: ${backendProposalId}`);
+
+      // Now create the proposal on-chain using the backend proposal ID
       try {
-        await contractHooks.createProposal({
+        console.log("🔗 Creating proposal on-chain...");
+        const txHash = await contractHooks.createProposal({
           daoId: onChainParams.daoId,
-          proposalId: onChainParams.proposalId,
+          proposalId: backendProposalId, // Use the ID from backend
           title: onChainParams.title,
           creator: onChainParams.creator,
           startTime: BigInt(
@@ -92,23 +137,30 @@ export const governanceService = {
           endTime: BigInt(Math.floor(onChainParams.endTime.getTime() / 1000)),
         });
 
+        console.log(`✅ On-chain proposal creation initiated: ${txHash}`);
+
         return {
           ...apiResponse,
           onChainCreated: true,
         };
       } catch (onChainError) {
-        console.warn("On-chain proposal creation failed:", onChainError);
+        console.warn(
+          "⚠️ On-chain creation failed, but API proposal exists:",
+          onChainError
+        );
+
         return {
           ...apiResponse,
           onChainCreated: false,
           onChainError:
             onChainError instanceof Error
               ? onChainError.message
-              : "Unknown error",
+              : "On-chain creation failed",
         };
       }
     } catch (error) {
-      console.error("Error creating hybrid proposal:", error);
+      console.error("❌ Error creating hybrid proposal:", error);
+
       return {
         success: false,
         message:
@@ -117,62 +169,152 @@ export const governanceService = {
     }
   },
 
-  // Hybrid function: Cast vote both on-chain and in API
+  // Enhanced hybrid function: Cast vote on-chain first, then API after settlement
   castHybridVote: async (
     voteData: VoteRequest,
     contractHooks: {
-      voteYes: (daoId: string, proposalId: string) => Promise<void>;
-      voteNo: (daoId: string, proposalId: string) => Promise<void>;
-      voteAbstain: (daoId: string, proposalId: string) => Promise<void>;
+      voteYes: (daoId: string, proposalId: string) => Promise<`0x${string}`>;
+      voteNo: (daoId: string, proposalId: string) => Promise<`0x${string}`>;
+      voteAbstain: (
+        daoId: string,
+        proposalId: string
+      ) => Promise<`0x${string}`>;
     }
   ): Promise<HybridVoteResponse> => {
     try {
-      // First cast vote in the API (existing functionality)
-      const apiResponse = await daoService.castVote(voteData);
+      console.log("🗳️ Starting hybrid vote casting...");
 
-      if (!apiResponse.success) {
-        throw new Error(apiResponse.message || "Failed to cast vote in API");
+      const { proposal_id, vote } = voteData;
+      const daoId = proposal_id; // Assuming proposal_id contains DAO info or you need to map it
+
+      // First cast vote on-chain and get transaction hash
+      let txHash: `0x${string}`;
+      switch (vote) {
+        case "YES":
+          txHash = await contractHooks.voteYes(daoId, proposal_id);
+          break;
+        case "NO":
+          txHash = await contractHooks.voteNo(daoId, proposal_id);
+          break;
+        case "ABSTAIN":
+          txHash = await contractHooks.voteAbstain(daoId, proposal_id);
+          break;
+        default:
+          throw new Error("Invalid vote type");
       }
 
-      // Then cast vote on-chain
-      try {
-        const { proposal_id, vote } = voteData;
-        const daoId = proposal_id; // Assuming proposal_id contains DAO info or you need to map it
+      console.log(`🗳️ On-chain vote cast initiated: ${txHash}`);
 
-        switch (vote) {
-          case "YES":
-            await contractHooks.voteYes(daoId, proposal_id);
-            break;
-          case "NO":
-            await contractHooks.voteNo(daoId, proposal_id);
-            break;
-          case "ABSTAIN":
-            await contractHooks.voteAbstain(daoId, proposal_id);
-            break;
-          default:
-            throw new Error("Invalid vote type");
+      // Wait for transaction settlement, then record in API
+      const apiResponse = await executeAPIAfterTransaction(
+        txHash,
+        () => daoService.castVote(voteData),
+        {
+          onTransactionConfirmed: (receipt) => {
+            console.log(
+              `✅ Vote transaction confirmed in block ${receipt.blockNumber}`
+            );
+          },
+          onAPIComplete: (result) => {
+            console.log(`✅ Vote recorded in API:`, result.success);
+          },
         }
+      );
 
-        return {
-          ...apiResponse,
-          onChainVoted: true,
-        };
-      } catch (onChainError) {
-        console.warn("On-chain vote failed:", onChainError);
+      return {
+        ...apiResponse,
+        onChainVoted: true,
+      };
+    } catch (error) {
+      console.error("❌ Error casting hybrid vote:", error);
+
+      // If on-chain fails, try API only as fallback
+      try {
+        console.log("🔄 Attempting API-only vote as fallback...");
+        const apiResponse = await daoService.castVote(voteData);
         return {
           ...apiResponse,
           onChainVoted: false,
           onChainError:
-            onChainError instanceof Error
-              ? onChainError.message
-              : "Unknown error",
+            error instanceof Error ? error.message : "On-chain vote failed",
+        };
+      } catch (apiError) {
+        return {
+          success: false,
+          message: `Both on-chain and API vote failed. On-chain: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }, API: ${
+            apiError instanceof Error ? apiError.message : "Unknown error"
+          }`,
         };
       }
+    }
+  },
+
+  // New function: Conclude proposal on-chain first, then update API
+  concludeHybridProposal: async (
+    proposalId: string,
+    contractHooks: {
+      deactivateProposal: (
+        daoId: string,
+        proposalId: string
+      ) => Promise<`0x${string}`>;
+    }
+  ): Promise<HybridVoteResponse> => {
+    try {
+      console.log("🏁 Starting hybrid proposal conclusion...");
+
+      // Get proposal data for DAO ID
+      const proposalData = await governanceService.getOnChainProposalData(
+        proposalId
+      );
+      if (!proposalData) {
+        throw new Error("Proposal not found");
+      }
+
+      // First deactivate on-chain
+      const txHash = await contractHooks.deactivateProposal(
+        proposalData.daoId,
+        proposalId
+      );
+
+      console.log(`🏁 On-chain proposal deactivation initiated: ${txHash}`);
+
+      // Wait for transaction settlement, then update API
+      const apiResponse = await executeAPIAfterTransaction(
+        txHash,
+        () =>
+          daoService.concludeProposal({
+            proposal_id: proposalId,
+            is_feedback: false, // Using the correct property name
+          }),
+        {
+          onTransactionConfirmed: (receipt) => {
+            console.log(
+              `✅ Proposal conclusion confirmed in block ${receipt.blockNumber}`
+            );
+          },
+          onAPIComplete: (result) => {
+            console.log(
+              `✅ Proposal conclusion recorded in API:`,
+              result.success
+            );
+          },
+        }
+      );
+
+      return {
+        ...apiResponse,
+        onChainVoted: true, // Reusing the field for conclusion status
+      };
     } catch (error) {
-      console.error("Error casting hybrid vote:", error);
+      console.error("❌ Error concluding hybrid proposal:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to cast vote",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to conclude proposal",
       };
     }
   },
@@ -285,11 +427,6 @@ export const governanceService = {
           throw new Error("Invalid vote type");
       }
     },
-  },
-
-  // Utility function to generate proposal ID
-  generateProposalId: (): string => {
-    return `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   },
 
   // Utility function to convert timestamps

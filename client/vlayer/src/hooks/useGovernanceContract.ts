@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -40,18 +40,38 @@ export interface CreateProposalParams {
   endTime: bigint;
 }
 
-export const useGovernanceContract = () => {
+export interface GovernanceContractResult {
+  createProposal: (params: CreateProposalParams) => Promise<`0x${string}`>;
+  voteYes: (daoId: string, proposalId: string) => Promise<`0x${string}`>;
+  voteNo: (daoId: string, proposalId: string) => Promise<`0x${string}`>;
+  voteAbstain: (daoId: string, proposalId: string) => Promise<`0x${string}`>;
+  deactivateProposal: (
+    daoId: string,
+    proposalId: string
+  ) => Promise<`0x${string}`>;
+  isLoading: boolean;
+  error: string | null;
+  txHash: string | undefined;
+  txStatus: string | undefined;
+  reset: () => void;
+}
+
+export const useGovernanceContract = (): GovernanceContractResult => {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
   const { openTxToast } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingResolvers, setPendingResolvers] = useState<
+    Map<string, (hash: `0x${string}`) => void>
+  >(new Map());
 
   const {
     writeContract,
     data: txHash,
     error: contractError,
     isPending: isWritePending,
+    reset: resetWriteContract,
   } = useWriteContract();
 
   const { status: txStatus } = useWaitForTransactionReceipt({
@@ -60,6 +80,17 @@ export const useGovernanceContract = () => {
 
   const governanceAddress = import.meta.env
     .VITE_GOVERNANCE_ADDRESS as `0x${string}`;
+
+  // Handle new transaction hash
+  useEffect(() => {
+    if (txHash) {
+      // Resolve any pending promises with the transaction hash
+      pendingResolvers.forEach((resolve) => {
+        resolve(txHash);
+      });
+      setPendingResolvers(new Map());
+    }
+  }, [txHash, pendingResolvers]);
 
   useEffect(() => {
     if (txStatus === "success") {
@@ -76,8 +107,13 @@ export const useGovernanceContract = () => {
     if (contractError) {
       setIsLoading(false);
       setError(contractError.message);
+      // Reject any pending promises
+      pendingResolvers.forEach((resolve, key) => {
+        // We can't reject here since we only have resolve, but we clear them
+      });
+      setPendingResolvers(new Map());
     }
-  }, [contractError]);
+  }, [contractError, pendingResolvers]);
 
   // Effect to open transaction toast
   useEffect(() => {
@@ -87,138 +123,243 @@ export const useGovernanceContract = () => {
   }, [txHash, openTxToast]);
 
   // Create a new proposal
-  const createProposal = async (params: CreateProposalParams) => {
-    if (!address) {
-      setError("Please connect your wallet");
-      return;
-    }
+  const createProposal = useCallback(
+    async (params: CreateProposalParams): Promise<`0x${string}`> => {
+      if (!address) {
+        const error = new Error("Please connect your wallet");
+        setError(error.message);
+        throw error;
+      }
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      await ensureBalance(address, balance?.value ?? 0n);
+      try {
+        await ensureBalance(address, balance?.value ?? 0n);
 
-      writeContract({
-        address: governanceAddress,
-        abi: governanceAbi.abi,
-        functionName: "createProposal",
-        args: [
-          params.daoId,
-          params.proposalId,
-          params.title,
-          params.creator,
-          params.startTime,
-          params.endTime,
-        ],
-      });
-    } catch (error) {
-      setIsLoading(false);
-      setError(
-        error instanceof Error ? error.message : "Failed to create proposal"
-      );
-    }
-  };
+        return new Promise<`0x${string}`>((resolve, reject) => {
+          const requestId = Math.random().toString(36);
+          setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
 
-  // Vote on a proposal
-  const voteYes = async (daoId: string, proposalId: string) => {
-    if (!address) {
-      setError("Please connect your wallet");
-      return;
-    }
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "createProposal",
+            args: [
+              params.daoId,
+              params.proposalId,
+              params.title,
+              params.creator,
+              params.startTime,
+              params.endTime,
+            ],
+          });
 
-    setIsLoading(true);
-    setError(null);
+          // Set a timeout to reject if no response
+          setTimeout(() => {
+            setPendingResolvers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(requestId);
+              return newMap;
+            });
+            reject(new Error("Transaction timeout"));
+          }, 30000);
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError(
+          error instanceof Error ? error.message : "Failed to create proposal"
+        );
+        throw error;
+      }
+    },
+    [address, balance, writeContract, governanceAddress]
+  );
 
-    try {
-      await ensureBalance(address, balance?.value ?? 0n);
+  // Vote on a proposal - Yes
+  const voteYes = useCallback(
+    async (daoId: string, proposalId: string): Promise<`0x${string}`> => {
+      if (!address) {
+        const error = new Error("Please connect your wallet");
+        setError(error.message);
+        throw error;
+      }
 
-      writeContract({
-        address: governanceAddress,
-        abi: governanceAbi.abi,
-        functionName: "voteYes",
-        args: [daoId, proposalId],
-      });
-    } catch (error) {
-      setIsLoading(false);
-      setError(error instanceof Error ? error.message : "Failed to vote");
-    }
-  };
+      setIsLoading(true);
+      setError(null);
 
-  const voteNo = async (daoId: string, proposalId: string) => {
-    if (!address) {
-      setError("Please connect your wallet");
-      return;
-    }
+      try {
+        await ensureBalance(address, balance?.value ?? 0n);
 
-    setIsLoading(true);
-    setError(null);
+        return new Promise<`0x${string}`>((resolve, reject) => {
+          const requestId = Math.random().toString(36);
+          setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
 
-    try {
-      await ensureBalance(address, balance?.value ?? 0n);
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "voteYes",
+            args: [daoId, proposalId],
+          });
 
-      writeContract({
-        address: governanceAddress,
-        abi: governanceAbi.abi,
-        functionName: "voteNo",
-        args: [daoId, proposalId],
-      });
-    } catch (error) {
-      setIsLoading(false);
-      setError(error instanceof Error ? error.message : "Failed to vote");
-    }
-  };
+          setTimeout(() => {
+            setPendingResolvers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(requestId);
+              return newMap;
+            });
+            reject(new Error("Transaction timeout"));
+          }, 30000);
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError(error instanceof Error ? error.message : "Failed to vote");
+        throw error;
+      }
+    },
+    [address, balance, writeContract, governanceAddress]
+  );
 
-  const voteAbstain = async (daoId: string, proposalId: string) => {
-    if (!address) {
-      setError("Please connect your wallet");
-      return;
-    }
+  const voteNo = useCallback(
+    async (daoId: string, proposalId: string): Promise<`0x${string}`> => {
+      if (!address) {
+        const error = new Error("Please connect your wallet");
+        setError(error.message);
+        throw error;
+      }
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      await ensureBalance(address, balance?.value ?? 0n);
+      try {
+        await ensureBalance(address, balance?.value ?? 0n);
 
-      writeContract({
-        address: governanceAddress,
-        abi: governanceAbi.abi,
-        functionName: "voteAbstain",
-        args: [daoId, proposalId],
-      });
-    } catch (error) {
-      setIsLoading(false);
-      setError(error instanceof Error ? error.message : "Failed to vote");
-    }
-  };
+        return new Promise<`0x${string}`>((resolve, reject) => {
+          const requestId = Math.random().toString(36);
+          setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
+
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "voteNo",
+            args: [daoId, proposalId],
+          });
+
+          setTimeout(() => {
+            setPendingResolvers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(requestId);
+              return newMap;
+            });
+            reject(new Error("Transaction timeout"));
+          }, 30000);
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError(error instanceof Error ? error.message : "Failed to vote");
+        throw error;
+      }
+    },
+    [address, balance, writeContract, governanceAddress]
+  );
+
+  const voteAbstain = useCallback(
+    async (daoId: string, proposalId: string): Promise<`0x${string}`> => {
+      if (!address) {
+        const error = new Error("Please connect your wallet");
+        setError(error.message);
+        throw error;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await ensureBalance(address, balance?.value ?? 0n);
+
+        return new Promise<`0x${string}`>((resolve, reject) => {
+          const requestId = Math.random().toString(36);
+          setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
+
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "voteAbstain",
+            args: [daoId, proposalId],
+          });
+
+          setTimeout(() => {
+            setPendingResolvers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(requestId);
+              return newMap;
+            });
+            reject(new Error("Transaction timeout"));
+          }, 30000);
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError(error instanceof Error ? error.message : "Failed to vote");
+        throw error;
+      }
+    },
+    [address, balance, writeContract, governanceAddress]
+  );
 
   // Deactivate a proposal (only creator can call)
-  const deactivateProposal = async (daoId: string, proposalId: string) => {
-    if (!address) {
-      setError("Please connect your wallet");
-      return;
-    }
+  const deactivateProposal = useCallback(
+    async (daoId: string, proposalId: string): Promise<`0x${string}`> => {
+      if (!address) {
+        const error = new Error("Please connect your wallet");
+        setError(error.message);
+        throw error;
+      }
 
-    setIsLoading(true);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await ensureBalance(address, balance?.value ?? 0n);
+
+        return new Promise<`0x${string}`>((resolve, reject) => {
+          const requestId = Math.random().toString(36);
+          setPendingResolvers((prev) => new Map(prev).set(requestId, resolve));
+
+          writeContract({
+            address: governanceAddress,
+            abi: governanceAbi.abi,
+            functionName: "deactivateProposal",
+            args: [daoId, proposalId],
+          });
+
+          setTimeout(() => {
+            setPendingResolvers((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(requestId);
+              return newMap;
+            });
+            reject(new Error("Transaction timeout"));
+          }, 30000);
+        });
+      } catch (error) {
+        setIsLoading(false);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to deactivate proposal"
+        );
+        throw error;
+      }
+    },
+    [address, balance, writeContract, governanceAddress]
+  );
+
+  const reset = useCallback(() => {
     setError(null);
-
-    try {
-      await ensureBalance(address, balance?.value ?? 0n);
-
-      writeContract({
-        address: governanceAddress,
-        abi: governanceAbi.abi,
-        functionName: "deactivateProposal",
-        args: [daoId, proposalId],
-      });
-    } catch (error) {
-      setIsLoading(false);
-      setError(
-        error instanceof Error ? error.message : "Failed to deactivate proposal"
-      );
-    }
-  };
+    setIsLoading(false);
+    setPendingResolvers(new Map());
+    resetWriteContract();
+  }, [resetWriteContract]);
 
   return {
     createProposal,
@@ -230,6 +371,7 @@ export const useGovernanceContract = () => {
     error,
     txHash,
     txStatus,
+    reset,
   };
 };
 

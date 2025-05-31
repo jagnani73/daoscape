@@ -48,6 +48,7 @@ export interface Proposal {
   voting_house: string;
   voting_start: string;
   feedback_conclusion: string;
+  akave_url?: string;
 }
 
 export interface DAO {
@@ -125,6 +126,7 @@ export interface CreateProposalResponse {
     proposal_id?: string;
     title?: string;
     created_at?: string;
+    akave_url?: string;
   };
 }
 

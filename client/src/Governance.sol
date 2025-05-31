@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
+/**
+ * @title Governance Contract
+ * @dev A time-based governance system where voting eligibility is determined solely by
+ * proposal start and end times, without relying on active/inactive states.
+ * This ensures proposals remain votable as long as they are within their time window.
+ */
 contract Governance {
     struct Proposal {
         string title;
@@ -106,6 +112,10 @@ contract Governance {
         _vote(_daoId, _proposalId, 2);
     }
 
+    /**
+     * @dev Internal voting function that validates voting eligibility based on time window only.
+     * Removes dependency on proposal active state for cleaner time-based governance.
+     */
     function _vote(
         string memory _daoId,
         string memory _proposalId,
@@ -114,8 +124,8 @@ contract Governance {
         require(bytes(_daoId).length > 0, "DAO ID cannot be empty");
         require(bytes(_proposalId).length > 0, "Proposal ID cannot be empty");
         require(
-            proposals[_daoId][_proposalId].active,
-            "Proposal is not active"
+            bytes(proposals[_daoId][_proposalId].title).length > 0,
+            "Proposal does not exist"
         );
         require(
             block.timestamp >= proposals[_daoId][_proposalId].startTime,
@@ -314,7 +324,7 @@ contract Governance {
     ) external view returns (bool) {
         Proposal storage proposal = proposals[_daoId][_proposalId];
         return
-            proposal.active &&
+            bytes(proposal.title).length > 0 &&
             block.timestamp >= proposal.startTime &&
             block.timestamp <= proposal.endTime;
     }

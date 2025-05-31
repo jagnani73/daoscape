@@ -24,6 +24,8 @@ import {
   CardTitle,
 } from "../../ui/card";
 import { Badge } from "../../ui/badge";
+import { useTransactionWithAPI } from "../../../hooks/useTransactionWithAPI";
+import { executeAPIAfterTransaction } from "../../../utils/transactionWithAPI";
 
 interface QuestDetailProps {
   quest: QuestWithStatus;
@@ -330,31 +332,56 @@ export const QuestDetail: React.FC<QuestDetailProps> = ({
     if (txStatus === "success" && pendingVerificationAction) {
       const actionType = pendingVerificationAction;
 
-      // Update the completion status in the backend
+      // Update the completion status in the backend AFTER transaction settlement
       const updateCompletion = async () => {
         try {
-          const updateData = {
-            [`twitter_${actionType}_completed`]: true,
-          };
+          if (!txHash) {
+            throw new Error("No transaction hash available");
+          }
 
-          await questService.updateParticipantCompletion(
-            quest.quest_id,
-            userAddress!,
-            updateData
-          );
+          console.log(`🎯 Quest verification transaction confirmed: ${txHash}`);
 
-          // Refresh participation status
-          const updatedParticipation = await questService.getParticipantStatus(
-            quest.quest_id,
-            userAddress!
+          // Wait for transaction settlement, then update API
+          await executeAPIAfterTransaction(
+            txHash,
+            async () => {
+              const updateData = {
+                [`twitter_${actionType}_completed`]: true,
+              };
+
+              await questService.updateParticipantCompletion(
+                quest.quest_id,
+                userAddress!,
+                updateData
+              );
+
+              // Refresh participation status
+              const updatedParticipation =
+                await questService.getParticipantStatus(
+                  quest.quest_id,
+                  userAddress!
+                );
+              setUserParticipation(updatedParticipation);
+
+              return updatedParticipation;
+            },
+            {
+              onTransactionConfirmed: (receipt) => {
+                console.log(
+                  `✅ Quest verification confirmed in block ${receipt.blockNumber}`
+                );
+              },
+              onAPIComplete: (result) => {
+                console.log(`✅ Quest completion updated in API`);
+                setSuccess(
+                  `${
+                    actionType.charAt(0).toUpperCase() + actionType.slice(1)
+                  } action verified successfully on-chain and recorded!`
+                );
+                onQuestUpdated();
+              },
+            }
           );
-          setUserParticipation(updatedParticipation);
-          setSuccess(
-            `${
-              actionType.charAt(0).toUpperCase() + actionType.slice(1)
-            } action verified successfully on-chain!`
-          );
-          onQuestUpdated();
         } catch (err) {
           console.error(`Error updating completion for ${actionType}:`, err);
           setError(
@@ -372,6 +399,7 @@ export const QuestDetail: React.FC<QuestDetailProps> = ({
     }
   }, [
     txStatus,
+    txHash,
     pendingVerificationAction,
     quest.quest_id,
     userAddress,

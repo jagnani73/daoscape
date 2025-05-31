@@ -8,6 +8,7 @@ import {
 } from "../../../ui/card";
 import { Badge } from "../../../ui/badge";
 import { Button } from "../../../ui/button";
+import { IPFSMetadata } from "../../../ui/IPFSMetadata";
 import { CreateProposal } from "../proposals/CreateProposal";
 import { Proposal } from "../../../../types/dao";
 import {
@@ -319,7 +320,7 @@ export const DAOProposalsTab: React.FC<DAOProposalsTabProps> = ({
                       </div>
                       <div className="mt-4 pt-4 border-t">
                         <div className="flex items-center justify-between">
-                          <div>
+                          <div className="flex-1">
                             {!showOnlyActive && (
                               <>
                                 <p className="text-sm font-medium">
@@ -341,6 +342,15 @@ export const DAOProposalsTab: React.FC<DAOProposalsTabProps> = ({
                                   {phase}
                                 </span>
                               </p>
+                            )}
+                            {/* IPFS Metadata Display */}
+                            {proposal.akave_url && (
+                              <div className="mt-2">
+                                <IPFSMetadata
+                                  akaveUrl={proposal.akave_url}
+                                  compact
+                                />
+                              </div>
                             )}
                           </div>
                           <div className="flex items-center gap-3">
