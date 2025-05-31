@@ -2,6 +2,7 @@ import type { CreateProposalBody } from "../microservices/proposal/proposal.sche
 import {
     CreateBucketCommand,
     HeadBucketCommand,
+    PutBucketVersioningCommand,
     PutObjectCommand,
     S3Client,
 } from "@aws-sdk/client-s3";
@@ -32,6 +33,7 @@ export class AkaveService {
 
             try {
                 await this.createBucketIfNotExists();
+                await this.enableBucketVersioning();
                 console.info("Akave Service initiated successfully!");
             } catch (error) {
                 console.warn(
@@ -80,6 +82,25 @@ export class AkaveService {
         }
     }
 
+    private static async enableBucketVersioning(): Promise<void> {
+        try {
+            await this.s3Client.send(
+                new PutBucketVersioningCommand({
+                    Bucket: this.bucketName,
+                    VersioningConfiguration: {
+                        Status: "Enabled",
+                    },
+                })
+            );
+            console.info(`Versioning enabled for bucket '${this.bucketName}'`);
+        } catch (error) {
+            console.warn(
+                `Failed to enable versioning for bucket '${this.bucketName}':`,
+                error
+            );
+        }
+    }
+
     public static getInstance(): AkaveService {
         if (!AkaveService.instance) {
             AkaveService.instance = new AkaveService();
@@ -111,6 +132,54 @@ export class AkaveService {
         } catch (error) {
             console.error(
                 `Failed to store proposal ${proposalId} in Akave O3:`,
+                error
+            );
+            return null;
+        }
+    }
+
+    public updateProposal(
+        proposalId: string,
+        updatedProposalData: CreateProposalBody
+    ) {
+        try {
+            const fileName = `proposal::${proposalId}.json`;
+
+            // Add update metadata
+            const enrichedData = {
+                ...updatedProposalData,
+                _metadata: {
+                    last_updated: new Date().toISOString(),
+                    version: "concluded",
+                    akave_storage: true,
+                },
+            };
+
+            const command = new PutObjectCommand({
+                Bucket: AkaveService.bucketName,
+                Key: fileName,
+                Body: JSON.stringify(enrichedData, null, 2),
+                ContentType: "application/json",
+                ACL: "public-read",
+                Metadata: {
+                    "update-type": "conclusion",
+                    "updated-at": new Date().toISOString(),
+                },
+            });
+
+            // * INFO: fire and forget
+            AkaveService.s3Client.send(command);
+
+            const assetUrl = `${process.env.AKAVE_BASE_URL}/${AkaveService.bucketName}/${fileName}`;
+
+            console.info(
+                `Proposal ${proposalId} updated successfully in Akave O3 at: ${assetUrl}`
+            );
+
+            return assetUrl;
+        } catch (error) {
+            console.error(
+                `Failed to update proposal ${proposalId} in Akave O3:`,
                 error
             );
             return null;
