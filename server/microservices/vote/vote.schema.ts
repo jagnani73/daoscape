@@ -1,4 +1,4 @@
-import { VOTE_TYPES } from "../../utils/constants";
+import { HOUSES, VOTE_TYPES } from "../../utils/constants";
 import { evmAddressSchema } from "../../utils/shared.schema";
 import z from "zod";
 
@@ -10,3 +10,11 @@ export const castVoteBodySchema = z.object({
 });
 
 export type CastVoteBody = z.infer<typeof castVoteBodySchema>;
+
+export const getVotesBodySchema = z.object({
+    proposal_id: z.string().uuid(),
+    is_feedback: z.boolean(),
+    house: z.nativeEnum(HOUSES).optional().nullable(),
+});
+
+export type GetVotesBody = z.infer<typeof getVotesBodySchema>;

@@ -1,6 +1,11 @@
 import { validateQuery } from "../../middlewares";
-import { castVoteBodySchema, type CastVoteBody } from "./vote.schema";
-import { castVote } from "./vote.service";
+import {
+    castVoteBodySchema,
+    getVotesBodySchema,
+    type CastVoteBody,
+    type GetVotesBody,
+} from "./vote.schema";
+import { castVote, getVotesForProposal } from "./vote.service";
 import {
     Router,
     type NextFunction,
@@ -35,9 +40,38 @@ const handleCastVote = async (
     }
 };
 
+const handleGetVotes = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { proposal_id, is_feedback, house } = req.body as GetVotesBody;
+
+        const votes = await getVotesForProposal(
+            proposal_id,
+            is_feedback,
+            house
+        );
+
+        res.json({
+            success: true,
+            data: votes,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 voteRouter.post(
     "/",
     // validateJwt(),
     validateQuery("body", castVoteBodySchema),
     handleCastVote
+);
+
+voteRouter.post(
+    "/proposal",
+    validateQuery("body", getVotesBodySchema),
+    handleGetVotes
 );
