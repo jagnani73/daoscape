@@ -177,3 +177,36 @@ export enum VoteType {
   NO = "NO",
   ABSTAIN = "ABSTAIN",
 }
+
+// Message types for proposal chat
+export interface Message {
+  id: string;
+  member_id: string;
+  proposal_id: string;
+  message: string;
+  created_at: string;
+}
+
+export interface CreateMessageRequest {
+  member_id: string;
+  proposal_id: string;
+  message: string;
+}
+
+export interface CreateMessageResponse {
+  success: boolean;
+  data?: Message;
+  error?: string;
+}
+
+export interface GetMessageHistoryRequest {
+  proposal_id: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetMessageHistoryResponse {
+  success: boolean;
+  data?: Message[];
+  error?: string;
+}

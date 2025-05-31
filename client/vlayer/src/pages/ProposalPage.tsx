@@ -31,6 +31,7 @@ import {
 } from "../utils/daoHelpers";
 import { useMemberData } from "../hooks/useMemberData";
 import { OnChainStatusBadge } from "../components/ui/OnChainStatusBadge";
+import { ProposalChat } from "../components/features/dao/chat/ProposalChat";
 
 interface ProposalPageProps {
   proposalId: string;
@@ -459,6 +460,13 @@ export const ProposalPage: React.FC<ProposalPageProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Proposal Chat */}
+      <ProposalChat
+        proposalId={proposalId}
+        proposalTitle={proposal.title}
+        isUserMember={!!userMember}
+      />
     </div>
   );
 };

@@ -347,6 +347,9 @@ export const DAOProposalsTab: React.FC<DAOProposalsTabProps> = ({
                             <p className="text-xs text-muted-foreground font-mono">
                               ID: {proposal.proposal_id.slice(0, 8)}...
                             </p>
+                            <Badge variant="outline" className="text-xs">
+                              💬 Chat Available
+                            </Badge>
                             {onProposalClick && (
                               <Button
                                 size="sm"
