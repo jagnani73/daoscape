@@ -26,6 +26,7 @@ interface DAODetailsTabProps {
   setJoinMessage: (message: string) => void;
   handleJoinSuccess: () => void;
   handleJoinError: (error: string) => void;
+  onRefetchUserDAOs?: () => void;
 }
 
 export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
@@ -37,6 +38,7 @@ export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
   setJoinMessage,
   handleJoinSuccess,
   handleJoinError,
+  onRefetchUserDAOs,
 }) => {
   return (
     <div className="space-y-6">
@@ -78,6 +80,7 @@ export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
                       walletAddress={address}
                       onJoinSuccess={handleJoinSuccess}
                       onJoinError={handleJoinError}
+                      onRefetchUserDAOs={onRefetchUserDAOs}
                     />
                   </>
                 ) : (
@@ -106,97 +109,93 @@ export const DAODetailsTab: React.FC<DAODetailsTabProps> = ({
         </>
       )}
 
-      {/* Links and Social */}
-      {(dao.socials[3] ||
-        dao.socials[2] ||
-        dao.socials[0] ||
-        dao.socials[1]) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Links & Social</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 flex-wrap">
-              {dao.socials[3] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[3]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    🌐 Website
-                  </a>
-                </Button>
-              )}
-              {dao.socials[2] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[2]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    🐦 Twitter
-                  </a>
-                </Button>
-              )}
-              {dao.socials[0] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[0]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    💬 Discord
-                  </a>
-                </Button>
-              )}
-              {dao.socials[1] && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={dao.socials[1]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    💬 Telegram
-                  </a>
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Additional Information */}
+      {/* DAO Information */}
       <Card>
         <CardHeader>
-          <CardTitle>About This DAO</CardTitle>
+          <CardTitle>About {dao.name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-semibold mb-2">Mission</h4>
+            <h4 className="font-medium mb-2">Description</h4>
             <p className="text-muted-foreground">{dao.description}</p>
           </div>
-          <div>
-            <h4 className="font-semibold mb-2">Founded</h4>
-            <p className="text-muted-foreground">
-              {formatDate(dao.created_at)}
-            </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-2">Created</h4>
+              <p className="text-muted-foreground">
+                {formatDate(dao.created_at)}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Owner</h4>
+              <p className="text-muted-foreground font-mono text-sm">
+                {dao.owner_address.slice(0, 6)}...{dao.owner_address.slice(-4)}
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="font-semibold mb-2">Owner</h4>
-            <p className="text-muted-foreground font-mono text-sm">
-              {dao.owner_address}
-            </p>
-          </div>
+
           {dao.tags && dao.tags.length > 0 && (
             <div>
-              <h4 className="font-semibold mb-2">Categories</h4>
-              <div className="flex gap-2 flex-wrap">
+              <h4 className="font-medium mb-2">Tags</h4>
+              <div className="flex flex-wrap gap-2">
                 {dao.tags.map((tag, index) => (
                   <Badge key={index} variant="secondary">
                     {tag}
                   </Badge>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {dao.socials && dao.socials.some((social) => social) && (
+            <div>
+              <h4 className="font-medium mb-2">Social Links</h4>
+              <div className="flex flex-wrap gap-2">
+                {dao.socials[0] && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={dao.socials[0]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Discord
+                    </a>
+                  </Button>
+                )}
+                {dao.socials[1] && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={dao.socials[1]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Telegram
+                    </a>
+                  </Button>
+                )}
+                {dao.socials[2] && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={dao.socials[2]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Twitter
+                    </a>
+                  </Button>
+                )}
+                {dao.socials[3] && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a
+                      href={dao.socials[3]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Website
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           )}

@@ -6,6 +6,7 @@ import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { DAOTab } from "../features/dao/DAOTab";
 import { QuestTab } from "../features/quest/QuestTab";
 import { ProfilePage } from "../../pages/ProfilePage";
+import { CreateDAOForm } from "../features/dao/CreateDAOForm";
 import { AutoCreateMember } from "../AutoCreateMember";
 import { STEP_KIND } from "../../utils/steps";
 import { useAppContext } from "../../contexts/AppContext";
@@ -14,12 +15,38 @@ export const MainLayout: React.FC = () => {
   const { state, goToStepByKind } = useAppContext();
   const [activeTab, setActiveTab] = useState("daos");
   const [selectedDAOId, setSelectedDAOId] = useState<string | null>(null);
+  const [showSecretDAOForm, setShowSecretDAOForm] = useState(false);
 
   useEffect(() => {
     if (!state.showHomepage) {
       setActiveTab("proof-verification");
     }
   }, [state.showHomepage]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const secretParam = urlParams.get("secret");
+
+    if (secretParam === "create-dao") {
+      setShowSecretDAOForm(true);
+      setActiveTab("secret-dao");
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === "D") {
+        event.preventDefault();
+        setShowSecretDAOForm(true);
+        setActiveTab("secret-dao");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleStartProofVerification = () => {
     setActiveTab("proof-verification");
@@ -35,9 +62,31 @@ export const MainLayout: React.FC = () => {
     if (tab !== "daos" && tab !== "quests") {
       setSelectedDAOId(null);
     }
+    if (tab !== "secret-dao") {
+      setShowSecretDAOForm(false);
+    }
+  };
+
+  const handleSecretDAOCreated = () => {
+    setShowSecretDAOForm(false);
+    setActiveTab("daos");
+  };
+
+  const handleCancelSecretDAO = () => {
+    setShowSecretDAOForm(false);
+    setActiveTab("daos");
   };
 
   const renderActiveContent = () => {
+    if (showSecretDAOForm) {
+      return (
+        <CreateDAOForm
+          onDAOCreated={handleSecretDAOCreated}
+          onCancel={handleCancelSecretDAO}
+        />
+      );
+    }
+
     switch (activeTab) {
       case "daos":
         return (
@@ -77,13 +126,15 @@ export const MainLayout: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            onDAOSelect={handleDAOSelect}
-          />
+          {!showSecretDAOForm && (
+            <Sidebar
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onDAOSelect={handleDAOSelect}
+            />
+          )}
 
-          <div className="flex-1">
+          <div className={`flex-1 ${showSecretDAOForm ? "max-w-none" : ""}`}>
             <div className="mt-6">{renderActiveContent()}</div>
           </div>
         </div>

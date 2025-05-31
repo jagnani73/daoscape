@@ -7,6 +7,7 @@ interface JoinDAOButtonProps {
   walletAddress?: string;
   onJoinSuccess?: () => void;
   onJoinError?: (error: string) => void;
+  onRefetchUserDAOs?: () => void;
 }
 
 export const JoinDAOButton: React.FC<JoinDAOButtonProps> = ({
@@ -14,6 +15,7 @@ export const JoinDAOButton: React.FC<JoinDAOButtonProps> = ({
   walletAddress,
   onJoinSuccess,
   onJoinError,
+  onRefetchUserDAOs,
 }) => {
   const [isJoining, setIsJoining] = useState(false);
 
@@ -43,8 +45,14 @@ export const JoinDAOButton: React.FC<JoinDAOButtonProps> = ({
       const joinResult = await daoService.joinDAO(daoId, walletAddress);
 
       if (joinResult.success) {
+        console.log("✅ Successfully joined DAO:", joinResult.message);
+
+        // Call the success handler first
         onJoinSuccess?.();
-        console.log("Successfully joined DAO:", joinResult.message);
+
+        // Trigger refetch of user DAOs to update the global state
+        console.log("🔄 Triggering user DAOs refetch after joining DAO");
+        onRefetchUserDAOs?.();
       } else {
         onJoinError?.(joinResult.message || "Failed to join DAO");
       }

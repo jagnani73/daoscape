@@ -22,6 +22,7 @@ import { ProposalPage } from "./ProposalPage";
 import { DAO, MembershipStatus } from "../types/dao";
 import { daoService } from "../services/daoService";
 import { useAccount } from "wagmi";
+import { useUserDAOs } from "../hooks/useUserDAOs";
 import {
   formatDate,
   getMembershipStatusBadgeProps,
@@ -50,6 +51,7 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
     null
   );
   const { address, isConnected } = useAccount();
+  const { refetch: refetchUserDAOs } = useUserDAOs();
 
   const isOwner =
     dao && address ? isDAOOwner(address, dao.owner_address) : false;
@@ -68,36 +70,53 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
       return phase === "ended";
     }) || [];
 
-  useEffect(() => {
-    const loadDAODetails = async () => {
-      try {
-        setLoading(true);
-        const daoData = await daoService.getDAOByIdDetailed(daoId);
-        setDAO(daoData);
+  const loadDAODetails = async () => {
+    try {
+      setLoading(true);
+      console.log("🔄 Loading DAO details for:", daoId);
+      const daoData = await daoService.getDAOByIdDetailed(daoId);
+      setDAO(daoData);
 
-        if (daoData && address) {
-          setMembershipStatus(
-            daoData.members?.some((member) => member.member_id === address)
-              ? "member"
-              : "not_member"
-          );
+      if (daoData && address) {
+        const isMember = daoData.members?.some(
+          (member) => member.member_id === address
+        );
+        setMembershipStatus(isMember ? "member" : "not_member");
+        console.log(
+          "👤 User membership status:",
+          isMember ? "member" : "not_member"
+        );
 
-          const userIsOwner = isDAOOwner(address, daoData.owner_address);
-          setViewMode(userIsOwner ? "owner" : "member");
-        }
-      } catch (error) {
-        console.error("Error loading DAO details:", error);
-      } finally {
-        setLoading(false);
+        const userIsOwner = isDAOOwner(address, daoData.owner_address);
+        setViewMode(userIsOwner ? "owner" : "member");
       }
-    };
 
+      console.log(
+        "✅ Successfully loaded DAO details. Members count:",
+        daoData?.members?.length || 0
+      );
+    } catch (error) {
+      console.error("Error loading DAO details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadDAODetails();
   }, [daoId, address]);
 
-  const handleJoinSuccess = () => {
+  const handleJoinSuccess = async () => {
     setMembershipStatus("member");
-    console.log("Successfully joined DAO!");
+    console.log("🎉 Successfully joined DAO! Refetching data...");
+
+    // Refetch DAO details to get updated member list
+    await loadDAODetails();
+
+    // Refetch user DAOs to update the global state
+    await refetchUserDAOs();
+
+    console.log("✅ Completed refetching after DAO join");
   };
 
   const handleJoinError = (error: string) => {
@@ -283,6 +302,7 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
             setJoinMessage={setJoinMessage}
             handleJoinSuccess={handleJoinSuccess}
             handleJoinError={handleJoinError}
+            onRefetchUserDAOs={refetchUserDAOs}
           />
         </TabsContent>
 
