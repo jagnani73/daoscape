@@ -1,6 +1,8 @@
 import { SupabaseService } from "../../services";
 import { SUPABASE_0_ROWS_ERROR_CODE } from "../../utils/constants";
 import { createError, HttpStatusCode } from "../../utils/functions";
+import type { MeritDistribution } from "../proposal/proposal.schema";
+import { distributeMerits } from "../proposal/proposal.service";
 import { getQuest } from "../quest/quest.service";
 import type {
     JoinQuestBody,
@@ -90,5 +92,41 @@ export const updateParticipantCompletion = async (
         throw error;
     }
 
+    if (
+        data.twitter_follow_completed &&
+        data.twitter_like_completed &&
+        data.twitter_retweet_completed
+    ) {
+        completeQuest(quest_id, member_id);
+    }
+
     return data;
+};
+
+const completeQuest = async (quest_id: string, member_id: string) => {
+    const quest = await getQuest(quest_id);
+    if (!quest) {
+        throw createError("Quest not found", HttpStatusCode.NOT_FOUND);
+    }
+
+    const distributions: MeritDistribution[] = [
+        {
+            amount: quest.reward_merits.toString(),
+            address: member_id,
+        },
+    ];
+
+    await distributeMerits(
+        `${quest_id}::${member_id}::${Date.now()}`,
+        "Quest completion reward",
+        distributions
+    );
+
+    // TODO: Add token distribution
+    // if (
+    //     quest.reward_token_address &&
+    //     quest.reward_token_amount &&
+    //     quest.reward_token_address
+    // ) {
+    // }
 };
