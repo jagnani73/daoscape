@@ -13,14 +13,14 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">
-                ⚡
-              </span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="DAOScape Logo"
+                className="w-8 h-8 object-contain"
+              />
             </div>
-            <h1 className="text-xl font-semibold text-foreground">
-              vlayer Governance
-            </h1>
+            <h1 className="text-xl font-semibold text-foreground">DAOScape</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Button
