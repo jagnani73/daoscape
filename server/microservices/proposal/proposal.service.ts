@@ -1,4 +1,8 @@
-import { BlockscoutService, SupabaseService } from "../../services";
+import {
+    AkaveService,
+    BlockscoutService,
+    SupabaseService,
+} from "../../services";
 import {
     CORRECT_VOTE_REPUTATION_CHANGE,
     INCORRECT_VOTE_REPUTATION_CHANGE,
@@ -42,7 +46,15 @@ export const createProposal = async ({
         throw error;
     }
 
-    return data;
+    const akaveUrl = AkaveService.getInstance().storeProposal(
+        data.proposal_id,
+        data
+    );
+
+    return {
+        proposal: data,
+        akave_storage_url: akaveUrl,
+    };
 };
 
 export const getProposal = async (proposal_id: string) => {

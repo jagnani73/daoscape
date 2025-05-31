@@ -10,6 +10,7 @@ import {
     voteRouter,
 } from "../microservices";
 import {
+    AkaveService,
     BlockscoutService,
     OneinchService,
     SupabaseService,
@@ -73,6 +74,7 @@ app.use(
 (async () => {
     try {
         await Promise.all([
+            AkaveService.init(),
             BlockscoutService.init(),
             OneinchService.init(),
             SupabaseService.init(),
