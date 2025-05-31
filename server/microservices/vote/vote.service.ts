@@ -40,14 +40,14 @@ export const castVote = async ({
     vote,
     is_feedback,
 }: CastVoteBody) => {
-    const dao = await getDao(proposal_id);
-    if (!dao) {
-        throw createError("DAO not found", HttpStatusCode.NOT_FOUND);
-    }
-
     const proposal = await getProposal(proposal_id);
     if (!proposal) {
         throw createError("Proposal not found", HttpStatusCode.NOT_FOUND);
+    }
+
+    const dao = await getDao(proposal.dao_id);
+    if (!dao) {
+        throw createError("DAO not found", HttpStatusCode.NOT_FOUND);
     }
 
     const memberships = await getMemberships(wallet_address);
@@ -109,10 +109,12 @@ export const castVote = async ({
         }[]
     );
 
-    const totalBalance = tokenBalances.reduce(
-        (acc, tokenBalance) => acc + tokenBalance.balance,
-        0
-    );
+    const totalBalance =
+        tokenBalances.reduce(
+            (acc, tokenBalance) => acc + tokenBalance.balance,
+            0
+        ) /
+        10 ** 18;
 
     const TOKEN_SUPPLY_PER_TOKEN = 1_000_000_000;
     const totalSupply =
