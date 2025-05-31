@@ -3,6 +3,8 @@ import {
     memberRouter,
     membershipRouter,
     proposalRouter,
+    questParticipantRouter,
+    questRouter,
     voteRouter,
 } from "../microservices";
 import {
@@ -37,6 +39,8 @@ app.use("/api/v1/member", memberRouter);
 app.use("/api/v1/proposal", proposalRouter);
 app.use("/api/v1/vote", voteRouter);
 app.use("/api/v1/membership", membershipRouter);
+app.use("/api/v1/quest", questRouter);
+app.use("/api/v1/quest-participant", questParticipantRouter);
 
 app.use("*", (_req: Request, res: Response) => {
     res.status(404).json({
