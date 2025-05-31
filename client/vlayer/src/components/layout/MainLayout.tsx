@@ -6,6 +6,7 @@ import { AnalyticsTab } from "../features/governance/AnalyticsTab";
 import { DAOTab } from "../features/dao/DAOTab";
 import { QuestTab } from "../features/quest/QuestTab";
 import { ProfilePage } from "../../pages/ProfilePage";
+import { HomePage } from "../../pages/HomePage";
 import { CreateDAOForm } from "../features/dao/CreateDAOForm";
 import { AutoCreateMember } from "../AutoCreateMember";
 import { STEP_KIND } from "../../utils/steps";
@@ -13,7 +14,7 @@ import { useAppContext } from "../../contexts/AppContext";
 
 export const MainLayout: React.FC = () => {
   const { state, goToStepByKind } = useAppContext();
-  const [activeTab, setActiveTab] = useState("daos");
+  const [activeTab, setActiveTab] = useState("home");
   const [selectedDAOId, setSelectedDAOId] = useState<string | null>(null);
   const [showSecretDAOForm, setShowSecretDAOForm] = useState(false);
 
@@ -77,6 +78,22 @@ export const MainLayout: React.FC = () => {
     setActiveTab("daos");
   };
 
+  // Homepage CTA handlers
+  const handleGetStarted = () => {
+    setActiveTab("proof-verification");
+    goToStepByKind(STEP_KIND.WELCOME);
+  };
+
+  const handleJoinDAO = () => {
+    setActiveTab("daos");
+    setSelectedDAOId(null);
+  };
+
+  const handleStartVerification = () => {
+    setActiveTab("proof-verification");
+    goToStepByKind(STEP_KIND.WELCOME);
+  };
+
   const renderActiveContent = () => {
     if (showSecretDAOForm) {
       return (
@@ -88,6 +105,14 @@ export const MainLayout: React.FC = () => {
     }
 
     switch (activeTab) {
+      case "home":
+        return (
+          <HomePage
+            onGetStarted={handleGetStarted}
+            onJoinDAO={handleJoinDAO}
+            onStartVerification={handleStartVerification}
+          />
+        );
       case "daos":
         return (
           <DAOTab selectedDAOId={selectedDAOId} onDAOSelect={handleDAOSelect} />
@@ -113,7 +138,11 @@ export const MainLayout: React.FC = () => {
         return <ProfilePage />;
       default:
         return (
-          <DAOTab selectedDAOId={selectedDAOId} onDAOSelect={handleDAOSelect} />
+          <HomePage
+            onGetStarted={handleGetStarted}
+            onJoinDAO={handleJoinDAO}
+            onStartVerification={handleStartVerification}
+          />
         );
     }
   };

@@ -50,6 +50,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="w-64 mr-8">
       <nav className="space-y-2">
         <button
+          onClick={() => handleNavClick("home")}
+          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
+            activeTab === "home"
+              ? "text-foreground bg-muted"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          🏠 Home
+        </button>
+        <button
           onClick={() => handleNavClick("daos")}
           className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full text-left ${
             activeTab === "daos"
