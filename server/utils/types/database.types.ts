@@ -115,21 +115,21 @@ export type Database = {
                     created_at: string;
                     member_id: string;
                     message: string;
-                    message_id: number;
+                    message_id: string;
                     proposal_id: string;
                 };
                 Insert: {
                     created_at?: string;
                     member_id: string;
                     message: string;
-                    message_id?: number;
+                    message_id?: string;
                     proposal_id: string;
                 };
                 Update: {
                     created_at?: string;
                     member_id?: string;
                     message?: string;
-                    message_id?: number;
+                    message_id?: string;
                     proposal_id?: string;
                 };
                 Relationships: [
