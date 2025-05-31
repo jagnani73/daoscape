@@ -17,6 +17,7 @@ import {
 import { DAODetailsTab } from "../components/features/dao/tabs/DAODetailsTab";
 import { DAOMembersTab } from "../components/features/dao/tabs/DAOMembersTab";
 import { DAOProposalsTab } from "../components/features/dao/tabs/DAOProposalsTab";
+import { DAOReputationTab } from "../components/features/dao/tabs/DAOReputationTab";
 import { ProposalPage } from "./ProposalPage";
 import { DAO, MembershipStatus } from "../types/dao";
 import { daoService } from "../services/daoService";
@@ -257,7 +258,7 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="details">DAO Details</TabsTrigger>
           <TabsTrigger value="members">
             Members ({dao.members?.length || 0})
@@ -273,6 +274,7 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
           <TabsTrigger value="ended-proposals">
             Ended Proposals ({endedProposals.length})
           </TabsTrigger>
+          <TabsTrigger value="reputation">Reputation</TabsTrigger>
         </TabsList>
 
         {/* DAO Details Tab */}
@@ -317,6 +319,16 @@ export const DAODetailPage: React.FC<DAODetailPageProps> = ({
             onProposalCreated={handleProposalCreated}
             onProposalClick={handleProposalClick}
             showOnlyActive={false}
+          />
+        </TabsContent>
+
+        {/* Reputation Tab */}
+        <TabsContent value="reputation" className="space-y-6">
+          <DAOReputationTab
+            dao={dao}
+            membershipStatus={membershipStatus}
+            isConnected={isConnected}
+            onReputationEarned={handleJoinSuccess}
           />
         </TabsContent>
       </Tabs>

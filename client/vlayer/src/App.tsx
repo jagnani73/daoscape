@@ -3,6 +3,10 @@ import { ProofProvider } from "@vlayer/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import {
+  NotificationProvider,
+  TransactionPopupProvider,
+} from "@blockscout/app-sdk";
 import { AppProvider } from "./contexts/AppContext";
 import { MainLayout } from "./components/layout";
 import { baseSepolia } from "@reown/appkit/networks";
@@ -40,18 +44,22 @@ const App = () => {
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <ProofProvider
-          config={{
-            proverUrl: import.meta.env.VITE_PROVER_URL,
-            wsProxyUrl: import.meta.env.VITE_WS_PROXY_URL,
-            notaryUrl: import.meta.env.VITE_NOTARY_URL,
-            token: import.meta.env.VITE_VLAYER_API_TOKEN,
-          }}
-        >
-          <AppProvider>
-            <MainLayout />
-          </AppProvider>
-        </ProofProvider>
+        <NotificationProvider>
+          <TransactionPopupProvider>
+            <ProofProvider
+              config={{
+                proverUrl: import.meta.env.VITE_PROVER_URL,
+                wsProxyUrl: import.meta.env.VITE_WS_PROXY_URL,
+                notaryUrl: import.meta.env.VITE_NOTARY_URL,
+                token: import.meta.env.VITE_VLAYER_API_TOKEN,
+              }}
+            >
+              <AppProvider>
+                <MainLayout />
+              </AppProvider>
+            </ProofProvider>
+          </TransactionPopupProvider>
+        </NotificationProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

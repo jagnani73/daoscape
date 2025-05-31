@@ -136,35 +136,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       )}
-
-      {/* Onboarding Section */}
-      <div className="mt-8">
-        <h3 className="text-sm font-medium text-foreground mb-4">ONBOARDING</h3>
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <span className="mr-2">📋</span>
-            Setup your profile
-          </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <span className="mr-2">📋</span>
-            Follow at least 3 spaces
-            <Badge variant="secondary" className="ml-2 text-xs">
-              1/3
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Filter */}
-      <div className="mt-8">
-        <h3 className="text-sm font-medium text-foreground mb-4">Status</h3>
-        <select className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md text-sm focus:ring-2 focus:ring-ring focus:border-transparent">
-          <option>Any</option>
-          <option>Active</option>
-          <option>Passed</option>
-          <option>Failed</option>
-        </select>
-      </div>
     </div>
   );
 };

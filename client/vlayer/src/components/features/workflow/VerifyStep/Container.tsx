@@ -6,6 +6,7 @@ import {
   useBalance,
 } from "wagmi";
 import { useLocalStorage } from "usehooks-ts";
+import { useNotification } from "@blockscout/app-sdk";
 import dynamicTwitterVerifier from "../../../../../../out/DynamicTwitterVerifier.sol/DynamicTwitterVerifier.json";
 import { VerifyStepPresentational } from "./Presentational";
 import { ensureBalance } from "../../../../utils/ethFaucet";
@@ -23,6 +24,7 @@ export const VerifyStep = () => {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
   const { writeContract, data: txHash, error } = useWriteContract();
+  const { openTxToast } = useNotification();
   const { status } = useWaitForTransactionReceipt({
     hash: txHash,
   });
@@ -138,6 +140,12 @@ export const VerifyStep = () => {
     goToStepByKind,
     setVerificationResults,
   ]);
+
+  useEffect(() => {
+    if (txHash) {
+      openTxToast("84532", txHash);
+    }
+  }, [txHash, openTxToast]);
 
   useEffect(() => {
     if (error) {
