@@ -13,6 +13,14 @@ export const joinQuest = async ({ member_id, quest_id }: JoinQuestBody) => {
         throw createError("Quest not found", HttpStatusCode.NOT_FOUND);
     }
 
+    const participant = await getParticipant(quest_id, member_id);
+    if (participant) {
+        throw createError(
+            "Participant already exists",
+            HttpStatusCode.BAD_REQUEST
+        );
+    }
+
     const { data, error } = await SupabaseService.getSupabase("admin")
         .from("quest_participant")
         .insert({
