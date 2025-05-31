@@ -1,15 +1,15 @@
 import * as z from "zod";
 
 export const joinQuestBodySchema = z.object({
-    member_id: z.string().trim().min(1, "Member ID is required"),
-    quest_id: z.string().uuid("Must be a valid UUID"),
+    member_id: z.string().trim(),
+    quest_id: z.string().uuid(),
 });
 
 export type JoinQuestBody = z.infer<typeof joinQuestBodySchema>;
 
 export const updateParticipantCompletionParamsSchema = z.object({
-    quest_id: z.string().uuid("Must be a valid UUID"),
-    member_id: z.string().trim().min(1, "Member ID is required"),
+    quest_id: z.string().uuid(),
+    member_id: z.string().trim(),
 });
 
 export const updateParticipantCompletionBodySchema = z
@@ -37,14 +37,14 @@ export type UpdateParticipantCompletionBody = z.infer<
 >;
 
 export const getParticipantParamsSchema = z.object({
-    quest_id: z.string().uuid("Must be a valid UUID"),
-    member_id: z.string().trim().min(1, "Member ID is required"),
+    quest_id: z.string().uuid(),
+    member_id: z.string().trim(),
 });
 
 export type GetParticipantParams = z.infer<typeof getParticipantParamsSchema>;
 
 export const getParticipantsParamsSchema = z.object({
-    quest_id: z.string().uuid("Must be a valid UUID"),
+    quest_id: z.string().uuid(),
 });
 
 export type GetParticipantsParams = z.infer<typeof getParticipantsParamsSchema>;

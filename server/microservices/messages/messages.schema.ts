@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const createMessageBodySchema = z.object({
-    member_id: z.string().uuid(),
+    member_id: z.string(),
     proposal_id: z.string().uuid(),
     message: z.string().trim().min(1).max(1000),
 });
