@@ -66,15 +66,8 @@ contract GitHubProver is Prover {
 
         GitHubActionConfig memory config = gitHubActionConfigs[0];
 
-        string memory fullUrl = _buildGitHubCommitsUrl(
-            repoOwner,
-            repoName,
-            branch
-        );
+        Web memory web = webProof.verifyWithUrlPrefix(config.baseUrl);
 
-        Web memory web = webProof.verifyWithUrlPrefix(fullUrl);
-
-        // Check if the username exists in the authors array
         bool commitVerified = _checkUserInAuthors(web, username);
 
         string memory resultMessage = commitVerified
@@ -98,7 +91,15 @@ contract GitHubProver is Prover {
         Web memory web,
         string memory username
     ) internal view returns (bool) {
-        string memory loginsJson = web.jsonGetString("authors[*].login");
+        string memory loginsJson = web.jsonGetString(
+            string(
+                abi.encodePacked(
+                    "authors[?login=='",
+                    username,
+                    "'].login | [0]"
+                )
+            )
+        );
 
         return _containsUsername(loginsJson, username);
     }
@@ -137,25 +138,6 @@ contract GitHubProver is Prover {
         }
 
         return false;
-    }
-
-    // Helper function to build GitHub commits URL
-    function _buildGitHubCommitsUrl(
-        string memory repoOwner,
-        string memory repoName,
-        string memory branch
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    "https://github.com/",
-                    repoOwner,
-                    "/",
-                    repoName,
-                    "/commits/",
-                    branch
-                )
-            );
     }
 
     // Helper function to convert uint to string
@@ -218,14 +200,7 @@ contract GitHubProver is Prover {
 
         GitHubActionConfig memory config = gitHubActionConfigs[0];
 
-        // Build the GitHub commits API URL
-        string memory fullUrl = _buildGitHubCommitsUrl(
-            repoOwner,
-            repoName,
-            branch
-        );
-
-        Web memory web = webProof.verifyWithUrlPrefix(fullUrl);
+        Web memory web = webProof.verifyWithUrlPrefix(config.baseUrl);
 
         bool[] memory results = new bool[](usernames.length);
         string[] memory resultMessages = new string[](usernames.length);

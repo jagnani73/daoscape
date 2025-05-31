@@ -174,7 +174,6 @@ export const useGitHubProofVerification = (
         )
       );
 
-      // Set step to waiting for proof when webProof is available
       if (currentStep === ProofVerificationStep.SENDING_TO_PROVER) {
         console.log("Setting step to WAITING_FOR_PROOF");
         setCurrentStep(ProofVerificationStep.WAITING_FOR_PROOF);
@@ -322,7 +321,7 @@ export const useGitHubProofVerification = (
     if (onChainVerificationStatus === "success") {
       setCurrentStep(ProofVerificationStep.DONE);
       if (txHash) {
-        openTxToast(txHash, "Transaction successful");
+        openTxToast("84532", txHash);
       }
     }
   }, [onChainVerificationStatus, txHash, openTxToast]);
