@@ -1,23 +1,35 @@
 import proverSpec from "../out/DynamicTwitterProver.sol/DynamicTwitterProver.json";
 import verifierSpec from "../out/DynamicTwitterVerifier.sol/DynamicTwitterVerifier.json";
+import emailProverSpec from "../out/EmailDomainProver.sol/EmailDomainProver.json";
+import emailVerifierSpec from "../out/EmailProofVerifier.sol/EmailDomainVerifier.json";
 import {
   deployVlayerContracts,
-  writeEnvVariables,
   getConfig,
+  writeEnvVariables,
 } from "@vlayer/sdk/config";
 
 const config = getConfig();
 
 const { prover, verifier } = await deployVlayerContracts({
-  // @ts-expect-error - TODO: fix this
   proverSpec,
-  // @ts-expect-error - TODO: fix this
   verifierSpec,
 });
+
+const { emailProver, emailVerifier } = await deployVlayerContracts({
+  proverSpec: emailProverSpec,
+  verifierSpec: emailVerifierSpec,
+});
+
+console.log("prover", prover);
+console.log("verifier", verifier);
+console.log("emailProver", emailProver);
+console.log("emailVerifier", emailVerifier);
 
 await writeEnvVariables(".env", {
   VITE_PROVER_ADDRESS: prover,
   VITE_VERIFIER_ADDRESS: verifier,
+  VITE_EMAIL_PROVER_ADDRESS: emailProver,
+  VITE_EMAIL_VERIFIER_ADDRESS: emailVerifier,
   VITE_CHAIN_NAME: config.chainName,
   VITE_PROVER_URL: config.proverUrl,
   VITE_JSON_RPC_URL: config.jsonRpcUrl,
