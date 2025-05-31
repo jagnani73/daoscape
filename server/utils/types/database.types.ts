@@ -110,6 +110,45 @@ export type Database = {
                     },
                 ];
             };
+            messages: {
+                Row: {
+                    created_at: string;
+                    member_id: string;
+                    message: string;
+                    message_id: number;
+                    proposal_id: string;
+                };
+                Insert: {
+                    created_at?: string;
+                    member_id: string;
+                    message: string;
+                    message_id?: number;
+                    proposal_id: string;
+                };
+                Update: {
+                    created_at?: string;
+                    member_id?: string;
+                    message?: string;
+                    message_id?: number;
+                    proposal_id?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "messages_member_id_fkey";
+                        columns: ["member_id"];
+                        isOneToOne: false;
+                        referencedRelation: "members";
+                        referencedColumns: ["member_id"];
+                    },
+                    {
+                        foreignKeyName: "messages_proposal_id_fkey";
+                        columns: ["proposal_id"];
+                        isOneToOne: false;
+                        referencedRelation: "proposals";
+                        referencedColumns: ["proposal_id"];
+                    },
+                ];
+            };
             proposals: {
                 Row: {
                     conclusion:
@@ -181,7 +220,7 @@ export type Database = {
                     quest_id: string;
                     reward_merits: number;
                     reward_token_address: string | null;
-                    reward_token_amount: string | null;
+                    reward_token_amount: number | null;
                     reward_token_chain: number | null;
                     start_time: string;
                     title: string;
@@ -194,7 +233,7 @@ export type Database = {
                     quest_id?: string;
                     reward_merits: number;
                     reward_token_address?: string | null;
-                    reward_token_amount?: string | null;
+                    reward_token_amount?: number | null;
                     reward_token_chain?: number | null;
                     start_time: string;
                     title: string;
@@ -207,7 +246,7 @@ export type Database = {
                     quest_id?: string;
                     reward_merits?: number;
                     reward_token_address?: string | null;
-                    reward_token_amount?: string | null;
+                    reward_token_amount?: number | null;
                     reward_token_chain?: number | null;
                     start_time?: string;
                     title?: string;
