@@ -16,7 +16,9 @@ import {
 let config = getConfig();
 
 const { prover, verifier } = await deployVlayerContracts({
+  // @ts-expect-error - Prover Spec is not typed
   proverSpec,
+  // @ts-expect-error - Verifier Spec is not typed
   verifierSpec,
 });
 
@@ -66,6 +68,7 @@ async function testSuccessProvingAndVerification({
   const hash = await vlayer.prove({
     address: prover,
     functionName: "main",
+    // @ts-expect-error - Prover Spec is not typed
     proverAbi: proverSpec.abi,
     args: [
       {
@@ -77,7 +80,7 @@ async function testSuccessProvingAndVerification({
     gasLimit: config.gasLimit,
   });
   const result = await vlayer.waitForProvingResult({ hash });
-  const [proof, twitterHandle, address] = result;
+  const [proof, twitterHandle, address] = result as [string, string, string];
 
   console.log("Verifying...");
 
@@ -148,6 +151,7 @@ async function testFailedProving({
     const hash = await vlayer.prove({
       address: prover,
       functionName: "main",
+      // @ts-expect-error - Prover Spec is not typed
       proverAbi: proverSpec.abi,
       args: [
         {

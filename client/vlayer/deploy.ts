@@ -28,7 +28,9 @@ const config = getConfig();
 // console.log("emailVerifier", emailVerifier);
 
 const { prover, verifier } = await deployVlayerContracts({
+  // @ts-expect-error - Prover Spec is not typed
   proverSpec: githubProverSpec,
+  // @ts-expect-error - Verifier Spec is not typed
   verifierSpec: githubVerifierSpec,
 });
 

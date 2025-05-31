@@ -1,6 +1,6 @@
 import React from "react";
 import { ActionType } from "../../../../hooks/useDynamicTwitterProof";
-import { SelectedAction } from "../../../../types/common";
+import { SelectedAction } from "../../../../contexts/AppContext";
 
 interface ActionSelectionPresentationalProps {
   selectedActions: SelectedAction[];

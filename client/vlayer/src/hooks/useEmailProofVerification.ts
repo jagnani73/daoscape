@@ -66,6 +66,7 @@ export const useEmailProofVerification = () => {
     error: callProverError,
   } = useCallProver({
     address: import.meta.env.VITE_EMAIL_PROVER_ADDRESS,
+    // @ts-expect-error - Prover Spec is not typed
     proverAbi: proverSpec.abi,
     functionName: "main",
     gasLimit: Number(import.meta.env.VITE_GAS_LIMIT || "1000000"),
@@ -166,7 +167,7 @@ export const useEmailProofVerification = () => {
   // Effects
   useEffect(() => {
     if (chainError) {
-      setError(`Chain error: ${chainError.message}`);
+      setError(`Chain error: ${chainError}`);
     }
   }, [chainError]);
 

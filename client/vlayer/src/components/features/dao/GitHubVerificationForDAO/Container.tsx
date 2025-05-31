@@ -135,7 +135,7 @@ export const GitHubVerificationForDAOContainer: React.FC<
       return;
     }
 
-    startProving(githubUsername);
+    startProving(githubUsername, repoOwner, repoName, branch);
   };
 
   const handleSubmitToDAO = async () => {

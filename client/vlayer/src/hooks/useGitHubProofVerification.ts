@@ -104,7 +104,7 @@ export const useGitHubProofVerification = (
     webProof,
     isPending: isWebProofPending,
     error: webProofError,
-  } = useWebProof(webProofConfig);
+  } = useWebProof(webProofConfig!);
 
   if (webProofError) {
     throw new WebProofError(webProofError.message);
@@ -125,7 +125,7 @@ export const useGitHubProofVerification = (
 
   useEffect(() => {
     if (chainError) {
-      setError(`Chain error: ${chainError.message}`);
+      setError(`Chain error: ${chainError}`);
     }
   }, [chainError]);
 
