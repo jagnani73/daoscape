@@ -57,17 +57,11 @@ app.use(
     (err: Error | any, _req: Request, res: Response, _next: NextFunction) => {
         const now = new Date();
         console.error("Server Error", `${now.toISOString()}`, err);
-        if (err.errorCode) {
-            res.status(err.errorCode).json({
-                success: false,
-                message: `${err.name || "Server Error"}: ${err.message}`,
-            });
-        } else {
-            res.status(500).json({
-                success: false,
-                message: "Internal Server Error",
-            });
-        }
+
+        res.status(err.errorCode || 500).json({
+            success: false,
+            message: `${err.name || "Server Error"}: ${err.message}`,
+        });
     }
 );
 

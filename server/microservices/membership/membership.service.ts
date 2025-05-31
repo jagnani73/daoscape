@@ -62,7 +62,7 @@ export const getTokensBalances = async (
                         `/balance/v1.2/${chain_id}/balances/${wallet_address}`
                     );
 
-                    const tokenBalance = data[token_address.toLowerCase()];
+                    const tokenBalance = data[token_address.toLowerCase()] ?? 1;
                     return {
                         token_address,
                         chain_id,
