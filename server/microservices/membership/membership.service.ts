@@ -23,7 +23,7 @@ const getMembership = async (member_id: string, dao_id: string) => {
         .eq("dao_id", dao_id)
         .single();
 
-    if (error) {
+    if (error && error.code !== SUPABASE_0_ROWS_ERROR_CODE) {
         throw error;
     }
 

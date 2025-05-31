@@ -243,7 +243,12 @@ export const distributeMerits = async (
         description,
         distributions,
         create_missing_accounts: true,
-        expected_total: (distributions.length * MERITS_PER_PROPOSAL).toString(),
+        expected_total: distributions
+            .reduce(
+                (acc, distribution) => acc + parseInt(distribution.amount),
+                0
+            )
+            .toString(),
     });
 
     return data;
