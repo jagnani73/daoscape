@@ -4,11 +4,13 @@ FROM ghcr.io/foundry-rs/foundry:latest AS foundry-builder
 # Set working directory
 WORKDIR /app
 
-# Copy Foundry configuration and source files
+# Copy Foundry configuration files
 COPY foundry.toml .
 COPY remappings.txt .
 COPY soldeer.lock .
 COPY .gitmodules .
+
+# Copy source directories
 COPY src/ src/
 COPY script/ script/
 COPY test/ test/
@@ -31,21 +33,24 @@ WORKDIR /app
 # Copy the built contracts from foundry stage
 COPY --from=foundry-builder /app/out ./out
 
-# Copy vlayer client files
-COPY vlayer/package.json vlayer/bun.lock ./
-COPY vlayer/tsconfig.json ./
-COPY vlayer/vite.config.ts ./
-COPY vlayer/tailwind.config.js ./
-COPY vlayer/postcss.config.js ./
-COPY vlayer/components.json ./
-COPY vlayer/index.html ./
+# Copy vlayer client package files first for better caching
+COPY vlayer/package.json ./package.json
+COPY vlayer/bun.lock ./bun.lock
 
 # Install dependencies
 RUN npm install
 
+# Copy vlayer client configuration files
+COPY vlayer/tsconfig.json ./tsconfig.json
+COPY vlayer/vite.config.ts ./vite.config.ts
+COPY vlayer/tailwind.config.js ./tailwind.config.js
+COPY vlayer/postcss.config.js ./postcss.config.js
+COPY vlayer/components.json ./components.json
+COPY vlayer/index.html ./index.html
+
 # Copy source code
-COPY vlayer/src/ src/
-COPY vlayer/public/ public/
+COPY vlayer/src/ ./src/
+COPY vlayer/public/ ./public/
 
 # Build the application
 RUN npm run build

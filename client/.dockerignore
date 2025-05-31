@@ -12,7 +12,8 @@ broadcast
 # Git and version control
 .git
 .gitignore
-.gitmodules
+# Don't exclude .gitmodules as it's needed for Foundry submodules
+# .gitmodules
 
 # IDE and editor files
 .vscode
