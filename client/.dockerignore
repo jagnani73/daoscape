@@ -1,0 +1,65 @@
+# Node modules and build artifacts
+vlayer/node_modules
+vlayer/dist
+vlayer/.next
+vlayer/build
+
+# Foundry build artifacts (will be built in container)
+out
+cache
+broadcast
+
+# Git and version control
+.git
+.gitignore
+.gitmodules
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.nyc_output
+
+# Temporary files
+tmp
+temp
+
+# Documentation
+README.md
+docs/
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker files
+Dockerfile*
+docker-compose* 

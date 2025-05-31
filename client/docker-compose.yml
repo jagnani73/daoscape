@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  vlayer-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Mount the out folder for development (optional)
+      - ./out:/app/out:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service with hot reload
+  vlayer-client-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: client-builder
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./vlayer/src:/app/src
+      - ./vlayer/public:/app/public
+      - ./out:/app/out:ro
+    command: npm run web:dev
+    profiles:
+      - dev
+
+networks:
+  default:
+    name: vlayer-network
